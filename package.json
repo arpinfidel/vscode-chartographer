@@ -1,8 +1,8 @@
 {
     "name": "chartographer",
     "displayName": "Chartographer",
-    "description": "chartographer for vscode",
-    "version": "1.0.0",
+    "description": "Easily show function call hierarchy in a neat graph representation",
+    "version": "1.0.2",
     "publisher": "ArpinFidel",
     "engines": {
         "vscode": "^1.65.0"

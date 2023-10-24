@@ -4,7 +4,7 @@ import {
     getIncomingCallNode,
     getOutgoingCallNode
 } from './call'
-import { CyNode, generateDot as generateGraph } from './graph'
+import { CyNode, generateGraph as generateGraph } from './graph'
 import { getHtmlContent } from './html'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -78,20 +78,22 @@ const buildWebview = (
         panel.webview.html = getHtmlContent(elems)
 
         panel.webview.onDidReceiveMessage((msg:any) => {
-            const node = nodes[msg]
-            if (!node) return
-
-            const range = new vscode.Range(
-                node.data.line,
-                0,
-                node.data.line,
-                0
-            )
-            vscode.window.showTextDocument(node.data.uri, {
-                selection: range,
-                preview: true,
-                viewColumn: vscode.ViewColumn.One,
-            })
+            if (msg.type === 'goToFunction') {
+                const node = nodes[msg.data]
+                if (!node) return
+    
+                const range = new vscode.Range(
+                    node.data.line,
+                    0,
+                    node.data.line,
+                    0
+                )
+                vscode.window.showTextDocument(node.data.uri, {
+                    selection: range,
+                    preview: true,
+                    viewColumn: vscode.ViewColumn.One,
+                })
+            }
         })
     }
 }
@@ -102,8 +104,9 @@ const registerWebviewPanelSerializer = (
     vscode.window.registerWebviewPanelSerializer(webViewType, {
         async deserializeWebviewPanel(
             webviewPanel: vscode.WebviewPanel,
-            state: Elements
+            state: any
         ) {
+            console.log(state)
             if (!state) {
                 vscode.window.showErrorMessage(
                     'Chartographer: fail to load previous state'

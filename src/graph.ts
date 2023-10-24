@@ -1,7 +1,7 @@
 import { CallHierarchyNode } from "./call"
 import * as vscode from 'vscode'
 
-export function generateDot(type: 'Incoming' | 'Outgoing', graph: CallHierarchyNode) {
+export function generateGraph(type: 'Incoming' | 'Outgoing', graph: CallHierarchyNode) {
     // Get the root folder of the workspace or an empty string if not available.
     const root = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
 
@@ -67,6 +67,7 @@ export function generateDot(type: 'Incoming' | 'Outgoing', graph: CallHierarchyN
             if (type === 'Incoming') {
                 elems.edges.push({
                     data: {
+                        id: `edge:${next.id}:${n.id}`,
                         source: next.id,
                         target: n.id,
                     }
@@ -74,6 +75,7 @@ export function generateDot(type: 'Incoming' | 'Outgoing', graph: CallHierarchyN
             } else {
                 elems.edges.push({
                     data: {
+                        id: `edge:${n.id}:${next.id}`,
                         source: n.id,
                         target: next.id,
                     }
@@ -105,6 +107,7 @@ export type CyNode = {
 
 export type CyEdge = {
     data: {
+        id: string;
         source: string;
         target: string;
     };
