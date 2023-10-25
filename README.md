@@ -26,13 +26,13 @@ Chartographer relies on the "call hierarchy" feature of an LSP server. So, to us
 ## Upcoming Features
 
 * exclude files configuration
+* show both incoming and outgoing calls
+* fetch additional connections on existing graph
 * highlight source and sink nodes configuration
 * graph layout options
-* highlight connected nodes on click
+* dim test files
 * support highlight based on node group (file)
-* show both incoming and outgoing calls
-* dim test files configuration
-* group by directory configuration
+* group by directory level configuration
 * override colors configuration
 * generate dot file
 

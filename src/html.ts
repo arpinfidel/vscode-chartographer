@@ -51,8 +51,18 @@ export function getHtmlContent(elems:Elements){
                     top: 10px;
                     left: 10px;
                     cursor: pointer;
-                    font-size: 20px;
                     z-index: 20;
+
+                    font-size: 20px;
+                    color: rgba(255, 255, 255, 0.5);
+
+                    width: 40px;
+                    height: 40px;
+                    background-color: rgba(0, 0, 0, 0.3);
+                    border-radius: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
                 }
         
                 #question-mark:hover {
@@ -71,7 +81,7 @@ export function getHtmlContent(elems:Elements){
                         question.style.display = "none";
                     } else {
                         instructions.style.display = "none";
-                        question.style.display = "block";
+                        question.style.display = "flex";
                     }
                 }
             </script>
@@ -138,6 +148,18 @@ export function getHtmlContent(elems:Elements){
                             }
                         },
                         {
+                            selector: '.dimmedNode',
+                            style: {
+                                'opacity': 0.5,
+                            }
+                        },
+                        {
+                            selector: '.highlightedNode',
+                            style: {
+                                'opacity': 1,
+                            }
+                        },
+                        {
                             selector: '.compound',
                             style: {
                                 'font-size': '10px',
@@ -187,9 +209,8 @@ export function getHtmlContent(elems:Elements){
                     cy.layout(layoutOpts).run();
 
                     cy.on('tap', function(e) {
-                        for (const edge of elems.edges) {
-                            cy.$id(edge.data.id).removeClass(['dimmedEdge', 'highlightedEdge']);
-                        }
+                        cy.$('node').removeClass(['highlightedNode', 'dimmedNode']);
+                        cy.$('node').removeClass(['highlightedNode', 'dimmedNode']);
                     })
 
                     cy.on('tap', 'node', function(e){
@@ -218,20 +239,17 @@ export function getHtmlContent(elems:Elements){
                         if (!node.isDimmed) {
                             node.isDimmed = true
                             
-                            for (const edge of elems.edges) {
-                                cy.$id(edge.data.id).classes('dimmedEdge');
-                            }
-    
-                            for (const elem of node.connectedEdges()) {
-                                console.log('connected', elem)
-                                elem.classes('highlightedEdge')
-                            }
+                            node.addClass('highlightedNode');
+                            node.connectedEdges().addClass('highlightedEdge');
+                            node.neighborhood('node').addClass('highlightedNode');
+                            cy.$('.highlightedNode').parent().addClass('highlightedNode');
+
+                            cy.$('edge:not(.highlightedEdge)').addClass('dimmedEdge');
+                            cy.$('node:not(.highlightedNode)').addClass('dimmedNode');
                         } else {
                             node.isDimmed = false
-
-                            for (const edge of elems.edges) {
-                                cy.$id(edge.data.id).removeClass(['dimmedEdge', 'highlightedEdge']);
-                            }
+                            cy.$('node').removeClass(['highlightedNode', 'dimmedNode']);
+                            cy.$('edge').removeClass(['highlightedEdge', 'dimmedEdge']);
                         }
                     });
                 }
