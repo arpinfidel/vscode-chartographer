@@ -1,8 +1,7 @@
 import * as vscode from 'vscode'
 import {
-    CallHierarchyNode,
-    getIncomingCallNode,
-    getOutgoingCallNode
+    CallHierarchy,
+    getCallNode,
 } from './call'
 import { CyNode, generateGraph as generateGraph } from './graph'
 import { getHtmlContent } from './html'
@@ -22,11 +21,8 @@ const getDefaultProgressOptions = (title: string): vscode.ProgressOptions => {
 }
 
 const buildWebview = (
-    type: 'Incoming' | 'Outgoing',
-    callNodeFunction: (
-        entryItem: vscode.CallHierarchyItem,
-        ignore: (item: vscode.CallHierarchyItem) => boolean
-    ) => Promise<CallHierarchyNode>,
+    direction: 'Incoming' | 'Outgoing',
+    callNodeFunction: (direction: 'Incoming' | 'Outgoing', root: vscode.CallHierarchyItem) => Promise<CallHierarchy[]>,
     onReceiveMsg: (msg: any) => void
 ) => {
     return async () => {
@@ -43,35 +39,19 @@ const buildWebview = (
             throw new Error(msg)
         }
         const workspace = vscode.workspace.workspaceFolders?.[0].uri!
-        let ignoreFile: string | null =
-            vscode.workspace
-                .getConfiguration()
-                .get<string>('chartographer.ignoreFile')
-                ?.replace('${workspace}', workspace.fsPath) ?? null
+        const graph = await callNodeFunction(direction, entry[0])
 
-        if (ignoreFile && !fs.existsSync(ignoreFile)) ignoreFile = null
-        const graph = await callNodeFunction(entry[0], item => {
-            if (ignoreFile === null) return false
-            const patterns = fs
-                .readFileSync(ignoreFile)
-                .toString()
-                .split('\n')
-                .filter(str => str.length > 0)
-                .map(str => path.resolve(workspace.fsPath, str))
-            return pm(patterns)(item.uri.fsPath)
-        })
-
-        const elems = generateGraph(type, graph)
+        const elems = generateGraph(graph)
 
         const nodes: { [key: string]: CyNode } = {}
         for (const node of elems.nodes) {
             nodes[node.data.id] = node
         }
 
-        const webviewType = `Chartographer.preview${type}`
+        const webviewType = `Chartographer.previewCallGraph`
         const panel = vscode.window.createWebviewPanel(
             webviewType,
-            `Chartographer ${type}`,
+            `Chartographer ${direction}`,
             vscode.ViewColumn.Beside,
             {enableScripts: true}
         )
@@ -101,22 +81,21 @@ const registerWebviewPanelSerializer = (
     webViewType: string,
     onReceiveMsg: (msg: any) => void
 ) => {
-    vscode.window.registerWebviewPanelSerializer(webViewType, {
-        async deserializeWebviewPanel(
-            webviewPanel: vscode.WebviewPanel,
-            state: any
-        ) {
-            console.log(state)
-            if (!state) {
-                vscode.window.showErrorMessage(
-                    'Chartographer: fail to load previous state'
-                )
-                return
+    vscode.window.registerWebviewPanelSerializer(webViewType, 
+        {
+            async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+                console.log('state', state)
+                if (!state) {
+                    vscode.window.showErrorMessage(
+                        'Chartographer: fail to load previous state'
+                    )
+                    return
+                }
+                webviewPanel.webview.html = getHtmlContent(state)
+                webviewPanel.webview.onDidReceiveMessage(onReceiveMsg)
             }
-            webviewPanel.webview.html = getHtmlContent(state)
-            webviewPanel.webview.onDidReceiveMessage(onReceiveMsg)
         }
-    })
+    )
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -128,11 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
-                buildWebview(
-                    'Incoming',
-                    getIncomingCallNode,
-                    onReceiveMsg
-                )
+                buildWebview('Incoming', getCallNode, onReceiveMsg)
             )
         }
     )
@@ -141,20 +116,12 @@ export function activate(context: vscode.ExtensionContext) {
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
-                buildWebview(
-                    'Outgoing',
-                    getOutgoingCallNode,
-                    onReceiveMsg
-                )
+                buildWebview('Outgoing', getCallNode, onReceiveMsg)
             )
         }
     )
     registerWebviewPanelSerializer(
-        `Chartographer.previewIncoming`,
-        onReceiveMsg
-    )
-    registerWebviewPanelSerializer(
-        'Chartographer.previewOutgoing',
+        `Chartographer.previewCallGraph`,
         onReceiveMsg
     )
     context.subscriptions.push(incomingDisposable)

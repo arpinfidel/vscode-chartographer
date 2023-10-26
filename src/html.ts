@@ -110,6 +110,8 @@ export function getHtmlContent(elems:Elements){
                 const elems = ${elemsStr}
                 const vscode = acquireVsCodeApi();
 
+                vscode.setState(elems)
+
                 const layoutOpts = {
                     name: 'klay',
                     animate: true,

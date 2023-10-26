@@ -12,11 +12,12 @@ vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscap
 * jump to function location on ctrl/cmd + click
 * click on function to highlight connections
 * supports color themes
+* ignore files (test files, etc)
 
 ## Quick start
 
-1. Open your folder and select a entry function
-2. Run `Chartographer: Show incoming call graph` command using `Ctrl+Shift+P` or context menu to show outgoing calls
+1. Move your editor cursor over a function name
+2. Run `Chartographer: Show outgoing call graph` command using `Ctrl+Shift+P` or context menu to show outgoing calls
 3. Or run `Chartographer: Show incoming call graph`
 
 ## Requirements
@@ -25,14 +26,14 @@ Chartographer relies on the "call hierarchy" feature of an LSP server. So, to us
 
 ## Upcoming Features
 
-* exclude files configuration
+* select multiple functions
+* highlight source and sink nodes configuration
+* support highlight based on node group (file)
 * show both incoming and outgoing calls
 * fetch additional connections on existing graph
-* highlight source and sink nodes configuration
 * graph layout options
 * dim test files
-* support highlight based on node group (file)
-* group by directory level configuration
+* group by directory configuration
 * override colors configuration
 * generate dot file
 

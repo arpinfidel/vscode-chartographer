@@ -1,25 +1,47 @@
-import { CallHierarchyNode } from "./call"
+import { CallHierarchy } from "./call"
 import * as vscode from 'vscode'
 
-export function generateGraph(type: 'Incoming' | 'Outgoing', graph: CallHierarchyNode) {
-    // Get the root folder of the workspace or an empty string if not available.
-    const root = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
-
-    // Define a function to create a node for a CallHierarchyNode.
-    const getNode = (n: CallHierarchyNode) => {
-        // Create a node with a name based on the URI, item name, and range.
-        const uri = n.item.uri.toString().replace(root, '')
-        return {
-            id: `"${uri}#${n.item.name}@${n.item.range.start.line}:${n.item.range.start.character}"`,
-            name: n.item.name,
-            file: uri,
-            uri: n.item.uri,
-            line: n.item.range.start.line //`${n.item.range.start.line}:${n.item.range.start.character}`,
-        } as Node;
+function findLongestCommonPrefix(strs: string[]): string {
+    if (strs.length === 0) {
+        return "";
     }
 
-    // Create the root node.
-    const node = getNode(graph);
+    // Sort the array to bring potentially common prefixes together
+    strs.sort();
+
+    const firstStr = strs[0];
+    const lastStr = strs[strs.length - 1];
+    let prefix = "";
+
+    for (let i = 0; i < firstStr.length; i++) {
+        if (firstStr.charAt(i) === lastStr.charAt(i)) {
+            prefix += firstStr.charAt(i);
+        } else {
+            break;
+        }
+    }
+
+    return prefix;
+}
+
+
+export function generateGraph(graph: CallHierarchy[]) {
+    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
+    const root = findLongestCommonPrefix(roots)
+
+
+    // Define a function to create a node for a CallHierarchy.
+    const getNode = (n: vscode.CallHierarchyItem) => {
+        // Create a node with a name based on the URI, item name, and range.
+        const uri = n.uri.toString().replace(root, '')
+        return {
+            id: `"${uri}#${n.name}@${n.range.start.line}:${n.range.start.character}"`,
+            name: n.name,
+            file: uri,
+            uri: n.uri,
+            line: n.range.start.line //`${n.range.start.line}:${n.range.start.character}`,
+        } as Node;
+    }
 
     const elems: Elements = {
         nodes: [],
@@ -30,7 +52,7 @@ export function generateGraph(type: 'Incoming' | 'Outgoing', graph: CallHierarch
     const files: { [key: string]: boolean } = {};
 
     // Define a function to insert a node and its children into the graph.
-    const insertNode = (n: Node, c: CallHierarchyNode) => {
+    const insertNode = (n: Node) => {
         if (nodes[n.id]) return;
 
         nodes[n.id] = true;
@@ -59,35 +81,36 @@ export function generateGraph(type: 'Incoming' | 'Outgoing', graph: CallHierarch
             })
         }
         
+    }
 
-        // Iterate through the children of the CallHierarchyNode.
-        for (const child of c.children) {
-            const next = getNode(child);
-            
-            if (type === 'Incoming') {
-                elems.edges.push({
-                    data: {
-                        id: `edge:${next.id}:${n.id}`,
-                        source: next.id,
-                        target: n.id,
-                    }
-                })
-            } else {
-                elems.edges.push({
-                    data: {
-                        id: `edge:${n.id}:${next.id}`,
-                        source: n.id,
-                        target: next.id,
-                    }
-                })
-            }
-
-            insertNode(next, child);
+    // Iterate through the children of the CallHierarchy.
+    for (const edge of graph) {
+        const node = getNode(edge.item);
+        insertNode(node);
+        
+        if (edge.from) {
+            const from = getNode(edge.from);
+            insertNode(from);
+            elems.edges.push({
+                data: {
+                    id: `edge:${from.id}:${node.id}`,
+                    source: from.id,
+                    target: node.id,
+                }
+            })
+        } else if (edge.to) {
+            const to = getNode(edge.to);
+            insertNode(to);
+            elems.edges.push({
+                data: {
+                    id: `edge:${node.id}:${to.id}`,
+                    source: node.id,
+                    target: to.id,
+                }
+            })
         }
     }
 
-    // Insert the root node and its children into the graph.
-    insertNode(node, graph);
 
     // Return the generated graph.
     return elems;

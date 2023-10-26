@@ -1,70 +1,66 @@
 import { CallHierarchyItem } from 'vscode'
 import * as vscode from 'vscode'
 import { output } from './extension'
+import { minimatch } from 'minimatch'
 
-export interface CallHierarchyNode {
+export interface CallHierarchy {
     item: CallHierarchyItem
-    children: CallHierarchyNode[]
+    from?: CallHierarchyItem
+    to?: CallHierarchyItem
 }
 
-async function getCallNode(
-    entryItem: CallHierarchyItem,
-    ignore: (item: vscode.CallHierarchyItem) => boolean,
-    outgoing: Boolean = true
+export async function getCallNode(
+    direction: 'Incoming' | 'Outgoing',
+    root: CallHierarchyItem,
 ) {
-    const command = outgoing
-        ? 'vscode.provideOutgoingCalls'
-        : 'vscode.provideIncomingCalls'
-    const nodes = new Set<CallHierarchyNode>()
-    const insertNode = async (node: CallHierarchyNode) => {
-        output.appendLine('resolve: ' + node.item.name)
-        nodes.add(node)
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
+    const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
+    const visited: { [key: string]: boolean } = {};
+    const edges = [] as CallHierarchy[]
+    const ignoreGlobs = vscode.workspace.getConfiguration().get<string[]>('chartographer.ignoreOnGenerate') ?? []
+    console.log('globs', ignoreGlobs)
+
+    const insertNode = async (node: CallHierarchyItem) => {
+        output.appendLine('resolve: ' + node.name)
+        const uri = node.uri.toString().replace(workspaceRoot, '')
+        const id  = `"${uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
+
+        if (visited[id]) return
+        visited[id] = true
+
         const calls:
             | vscode.CallHierarchyOutgoingCall[]
-            | vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand(
-            command,
-            node.item
-        )
+            | vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand(command, node)
+
         for (const call of calls) {
-            const next =
-                call instanceof vscode.CallHierarchyOutgoingCall
-                    ? call.to
-                    : call.from
-            if (ignore(next)) {
-                output.appendLine('ignore it in config, ' + next.name)
-                continue
+            let next: CallHierarchyItem
+            let edge: CallHierarchy
+            if (call instanceof vscode.CallHierarchyOutgoingCall) {
+                edge = { item: node, to: call.to }
+                next = call.to
+            } else {
+                edge = { item: node, from: call.from }
+                next = call.from
             }
-            let isSkip = false
-            for (const n of nodes) {
-                if (isEqual(n.item, next)) {
-                    output.appendLine('skip, already resolve: ' + next.name)
-                    node.children.push(n)
-                    isSkip = true
+
+            let skip = false
+            for (const glob of ignoreGlobs) {
+                console.log('glob', glob, next.uri.fsPath, minimatch(next.uri.fsPath, glob))
+                if (minimatch(next.uri.fsPath, glob)) {
+                    skip = true
+                    break
                 }
             }
-            if (isSkip) continue
-            const child = { item: next, children: [] }
-            node.children.push(child)
-            await insertNode(child)
+            if (skip) continue
+
+            edges.push(edge)
+            await insertNode(next)
         }
     }
-    const graph = { item: entryItem, children: [] as CallHierarchyNode[] }
-    await insertNode(graph)
-    return graph
-}
 
-export async function getIncomingCallNode(
-    entryItem: CallHierarchyItem,
-    ignore: (item: vscode.CallHierarchyItem) => boolean
-) {
-    return await getCallNode(entryItem, ignore, false)
-}
-
-export async function getOutgoingCallNode(
-    entryItem: CallHierarchyItem,
-    ignore: (item: vscode.CallHierarchyItem) => boolean
-) {
-    return await getCallNode(entryItem, ignore, true)
+    await insertNode(root)
+    
+    return edges
 }
 
 function isEqual(a: CallHierarchyItem, b: CallHierarchyItem) {
