@@ -7,10 +7,12 @@ import * as fs from 'fs'
 export function getHtmlContent(elems:Elements){
     const elemsStr = JSON.stringify(elems)
 
-    const color = (n: string) => {
-        const col = new vscode.ThemeColor(n)
-        return col
+    const configs = vscode.workspace.getConfiguration('chartographer')
+    const config = {
+        highlightRoots: configs.get<boolean>('chartographer.highlightRoots'),
+        highlightLeaves: configs.get<boolean>('chartographer.highlightLeaves'),
     }
+    const configStr = JSON.stringify(config)
 
     const html = `
     <!DOCTYPE html>
@@ -106,16 +108,17 @@ export function getHtmlContent(elems:Elements){
             <script src="https://cdn.jsdelivr.net/npm/cytoscape-klay@3.1.3/cytoscape-klay.min.js"></script>
 
             <script>
+                const vscode = acquireVsCodeApi();
                 const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
                 const elems = ${elemsStr}
-                const vscode = acquireVsCodeApi();
+                const config = ${configStr}
 
                 vscode.setState(elems)
 
                 const layoutOpts = {
                     name: 'klay',
                     animate: true,
-                    animationDuration: 100,
+                    animationDuration: 300,
                     klay: {
                         addUnnecessaryBendpoints: false,
                         direction: 'RIGHT',
@@ -159,6 +162,20 @@ export function getHtmlContent(elems:Elements){
                             selector: '.highlightedNode',
                             style: {
                                 'opacity': 1,
+                            }
+                        },
+                        {
+                            selector: '.highlightedLeafNode',
+                            style: {
+                                'background-color': getStyle('--vscode-editorWarning-background'),
+                                'color': getStyle('--vscode-editorWarning-foreground'),
+                            }
+                        },
+                        {
+                            selector: '.highlightedRootNode',
+                            style: {
+                                'background-color': getStyle('--vscode-editorError-background'),
+                                'color': getStyle('--vscode-editorError-foreground'),
                             }
                         },
                         {
@@ -206,6 +223,9 @@ export function getHtmlContent(elems:Elements){
                         elements: elems,
                         layout: layoutOpts,
                     });
+                    
+                    if (config.highlightRoots) cy.nodes().roots().not(':parent').addClass('highlightedRootNode');
+                    if (config.hightlightLeaves) cy.nodes().leaves().not(':parent').addClass('highlightedLeafNode');
 
                     // Apply the layout to the graph
                     cy.layout(layoutOpts).run();

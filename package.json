@@ -2,7 +2,7 @@
     "name": "chartographer",
     "displayName": "Chartographer",
     "description": "Easily visualize function call hierarchy in a neat graph representation",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "publisher": "ArpinFidel",
     "engines": {
         "vscode": "^1.65.0"
@@ -45,6 +45,21 @@
                         "type": "string"
                     },
                     "default": []
+                },
+                "chartographer.highlightRoots": {
+                    "description": "Color root nodes in the call graph",
+                    "type": "boolean",
+                    "default": true
+                },
+                "chartographer.highlightLeaves": {
+                    "description": "Color leaf nodes in the call graph",
+                    "type": "boolean",
+                    "default": false
+                },
+                "chartographer.ignoreNonWorkspaceFiles": {
+                    "description": "Ignore files that are not part of the current workspace",
+                    "type": "boolean",
+                    "default": true
                 }
             }
         }

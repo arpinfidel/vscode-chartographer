@@ -12,3 +12,9 @@
 
 - Add ignore config
 - Fix webview fails to load after reloading vs code
+
+## [1.0.6] 2023-10-26
+
+- Optimize graph generation
+- Add highlights for roots and leaves
+- Add option to ignore files outside of workspace

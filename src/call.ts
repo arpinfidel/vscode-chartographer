@@ -14,11 +14,13 @@ export async function getCallNode(
     root: CallHierarchyItem,
 ) {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
+    const configs = vscode.workspace.getConfiguration()
+    const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
+    const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
+
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
     const edges = [] as CallHierarchy[]
-    const ignoreGlobs = vscode.workspace.getConfiguration().get<string[]>('chartographer.ignoreOnGenerate') ?? []
-    console.log('globs', ignoreGlobs)
 
     const insertNode = async (node: CallHierarchyItem) => {
         output.appendLine('resolve: ' + node.name)
@@ -32,7 +34,7 @@ export async function getCallNode(
             | vscode.CallHierarchyOutgoingCall[]
             | vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand(command, node)
 
-        for (const call of calls) {
+        await Promise.all(calls.map(async (call) => {
             let next: CallHierarchyItem
             let edge: CallHierarchy
             if (call instanceof vscode.CallHierarchyOutgoingCall) {
@@ -45,17 +47,30 @@ export async function getCallNode(
 
             let skip = false
             for (const glob of ignoreGlobs) {
-                console.log('glob', glob, next.uri.fsPath, minimatch(next.uri.fsPath, glob))
                 if (minimatch(next.uri.fsPath, glob)) {
                     skip = true
                     break
                 }
             }
-            if (skip) continue
+            if (ignoreNonWorkspaceFiles) {
+                let isInWorkspace = false
+                console.log('workspaces', vscode.workspace.workspaceFolders)
+                for (const workspace of vscode.workspace.workspaceFolders ?? []) {
+                    console.log('ignore', next.uri.fsPath, workspace.uri.fsPath)
+                    if (next.uri.fsPath.startsWith(workspace.uri.fsPath)) {
+                        isInWorkspace = true
+                        break
+                    }
+                }
+                if (!isInWorkspace) {
+                    skip = true
+                }
+            }
+            if (skip) return
 
             edges.push(edge)
             await insertNode(next)
-        }
+        }))
     }
 
     await insertNode(root)
