@@ -18,3 +18,17 @@
 - Optimize graph generation
 - Add highlights for roots and leaves
 - Add option to ignore files outside of workspace
+
+## [1.0.7] 2023-10-26
+
+- Fix missing dependency
+
+## [1.0.8] 2023-10-26
+
+- Fix configuration not loaded
+
+## [1.0.9] 2023-10-27
+
+- Fix issues with highlighting
+- Allow highlighting a whole group
+- Allow user to expand graph with alt click

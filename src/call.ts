@@ -2,6 +2,7 @@ import { CallHierarchyItem } from 'vscode'
 import * as vscode from 'vscode'
 import { output } from './extension'
 import { minimatch } from 'minimatch'
+import EventEmitter = require('events')
 
 export interface CallHierarchy {
     item: CallHierarchyItem
@@ -9,10 +10,19 @@ export interface CallHierarchy {
     to?: CallHierarchyItem
 }
 
-export async function getCallNode(
-    direction: 'Incoming' | 'Outgoing',
+export async function getCallHierarchy(
+    direction: 'Incoming' | 'Outgoing' | 'Both',
     root: CallHierarchyItem,
+    addEdge: (edge: CallHierarchy) => void
 ) {
+    if (direction === 'Both') {
+        await getCallHierarchy('Incoming', root, addEdge)
+        await getCallHierarchy('Outgoing', root, addEdge)
+        return
+    }
+
+    console.log('root', root)
+
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
     const configs = vscode.workspace.getConfiguration()
     const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
@@ -20,9 +30,8 @@ export async function getCallNode(
 
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
-    const edges = [] as CallHierarchy[]
 
-    const insertNode = async (node: CallHierarchyItem) => {
+    const traverse = async (node: CallHierarchyItem) => {
         output.appendLine('resolve: ' + node.name)
         const uri = node.uri.toString().replace(workspaceRoot, '')
         const id  = `"${uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
@@ -54,9 +63,7 @@ export async function getCallNode(
             }
             if (ignoreNonWorkspaceFiles) {
                 let isInWorkspace = false
-                console.log('workspaces', vscode.workspace.workspaceFolders)
                 for (const workspace of vscode.workspace.workspaceFolders ?? []) {
-                    console.log('ignore', next.uri.fsPath, workspace.uri.fsPath)
                     if (next.uri.fsPath.startsWith(workspace.uri.fsPath)) {
                         isInWorkspace = true
                         break
@@ -68,14 +75,12 @@ export async function getCallNode(
             }
             if (skip) return
 
-            edges.push(edge)
-            await insertNode(next)
+            addEdge(edge)
+            await traverse(next)
         }))
     }
 
-    await insertNode(root)
-    
-    return edges
+    await traverse(root)
 }
 
 function isEqual(a: CallHierarchyItem, b: CallHierarchyItem) {

@@ -25,10 +25,9 @@ function findLongestCommonPrefix(strs: string[]): string {
 }
 
 
-export function generateGraph(graph: CallHierarchy[]) {
+export function generateGraph(edge: CallHierarchy) {
     const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
     const root = findLongestCommonPrefix(roots)
-
 
     // Define a function to create a node for a CallHierarchy.
     const getNode = (n: vscode.CallHierarchyItem) => {
@@ -39,78 +38,67 @@ export function generateGraph(graph: CallHierarchy[]) {
             name: n.name,
             file: uri,
             uri: n.uri,
-            line: n.range.start.line //`${n.range.start.line}:${n.range.start.character}`,
+            line: n.range.start.line, //`${n.range.start.line}:${n.range.start.character}`,
+            character: n.range.start.character,
         } as Node;
     }
 
-    const elems: Elements = {
-        nodes: [],
-        edges: [],
-    };
-
-    const nodes: { [key: string]: boolean } = {};
-    const files: { [key: string]: boolean } = {};
+    const elems: Element[] = []
 
     // Define a function to insert a node and its children into the graph.
     const insertNode = (n: Node) => {
-        if (nodes[n.id]) return;
-
-        nodes[n.id] = true;
-
-        elems.nodes.push({
+        elems.push({
+            group: 'nodes',
             data: {
-                id: n.id,
+                id: `node:${n.id}`,
                 label: n.name,
-                parent: n.file,
+                parent: `file:${n.file}`,
                 uri: n.uri,
                 line: n.line,
+                character: n.character,
             }
         })
 
-        if (!files[n.file]) {
-            files[n.file] = true;
-
-            elems.nodes.push({
-                data: {
-                    id: n.file,
-                    label: n.file,
-                    uri: n.uri,
-                    line: 0,
-                },
-                classes: 'compound'
-            })
-        }
-        
+        elems.push({
+            group: 'nodes',
+            data: {
+                id: `file:${n.file}`,
+                label: n.file,
+                uri: n.uri,
+                line: 0,
+                character: 0,
+            },
+            classes: 'compound'
+        })
     }
 
     // Iterate through the children of the CallHierarchy.
-    for (const edge of graph) {
-        const node = getNode(edge.item);
-        insertNode(node);
-        
-        if (edge.from) {
-            const from = getNode(edge.from);
-            insertNode(from);
-            elems.edges.push({
-                data: {
-                    id: `edge:${from.id}:${node.id}`,
-                    source: from.id,
-                    target: node.id,
-                }
-            })
-        } else if (edge.to) {
-            const to = getNode(edge.to);
-            insertNode(to);
-            elems.edges.push({
-                data: {
-                    id: `edge:${node.id}:${to.id}`,
-                    source: node.id,
-                    target: to.id,
-                }
-            })
-        }
+    const node = getNode(edge.item);
+    insertNode(node);
+    
+    if (edge.from) {
+        const from = getNode(edge.from);
+        insertNode(from);
+        elems.push({
+            group: 'edges',
+            data: {
+                id: `edge:${from.id}:${node.id}`,
+                source: `node:${from.id}`,
+                target: `node:${node.id}`,
+            }
+        })
+    } else if (edge.to) {
+        const to = getNode(edge.to);
+        insertNode(to);
+        elems.push({
+            group: 'edges',
+            data: {
+                id: `edge:${node.id}:${to.id}`,
+                source: `node:${node.id}`,
+                target: `node:${to.id}`,
+            }
+        })
     }
-
 
     // Return the generated graph.
     return elems;
@@ -118,17 +106,20 @@ export function generateGraph(graph: CallHierarchy[]) {
 
 
 export type CyNode = {
+    group: 'nodes';
     data: {
         id: string;
         label: string;
         parent?: string;
         uri: vscode.Uri;
         line: number;
+        character: number;
     };
     classes?: string;
 };
 
 export type CyEdge = {
+    group: 'edges';
     data: {
         id: string;
         source: string;
@@ -136,10 +127,7 @@ export type CyEdge = {
     };
 };
 
-export type Elements = {
-    nodes: CyNode[];
-    edges: CyEdge[];
-};
+export type Element = CyNode | CyEdge;
 
 
 export type Node = {
@@ -148,4 +136,5 @@ export type Node = {
     file: string,
     uri: vscode.Uri,
     line: number,
+    character: number,
 }
