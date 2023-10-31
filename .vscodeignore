@@ -11,3 +11,4 @@ vsc-extension-quickstart.md
 **/*.ts
 .history
 static/**
+!src/html/*.html

@@ -27,8 +27,12 @@
 
 - Fix configuration not loaded
 
-## [1.0.9] 2023-10-27
+## [1.0.9] 2023-10-30
 
 - Fix issues with highlighting
 - Allow highlighting a whole group
 - Allow user to expand graph with alt click
+
+## [1.0.9] 2023-10-31
+
+- Fix missing dependency

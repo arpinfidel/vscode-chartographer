@@ -28,7 +28,6 @@ Chartographer relies on the "call hierarchy" feature of an LSP server. So, to us
 ## Upcoming Features
 
 * select multiple functions
-* show both incoming and outgoing calls
 * graph layout options
 * dim test files
 * group by directory configuration
