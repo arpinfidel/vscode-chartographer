@@ -33,10 +33,14 @@
 - Allow highlighting a whole group
 - Allow user to expand graph with alt click
 
-## [1.0.9] 2023-10-31
+## [1.0.10] 2023-10-31
 
 - Fix missing dependency
 
-## [1.0.9] 2023-11-01
+## [1.0.11] 2023-11-01
 
 - Add options for graph layout algorithms
+
+## [1.0.11] 2023-11-02
+
+- Add command to add function to last active graph

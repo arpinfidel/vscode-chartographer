@@ -21,9 +21,6 @@ export async function getCallHierarchy(
         return
     }
 
-    console.log('root', root)
-
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.toString() ?? '';
     const configs = vscode.workspace.getConfiguration()
     const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
     const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
@@ -33,8 +30,7 @@ export async function getCallHierarchy(
 
     const traverse = async (node: CallHierarchyItem) => {
         output.appendLine('resolve: ' + node.name)
-        const uri = node.uri.toString().replace(workspaceRoot, '')
-        const id  = `"${uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
+        const id  = `"${node.uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
 
         if (visited[id]) return
         visited[id] = true

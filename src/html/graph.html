@@ -110,15 +110,16 @@
             const vscode = acquireVsCodeApi();
             const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
             let cy = null
-            let state = {
+            const previousState = vscode.getState();
+            let state = previousState || {
                 config: {},
 				elems: [],
 			}
 
             const layoutDebounce = {
-                klay: 100,
+                klay: 5,
                 elk: 500,
-                dagre: 100,
+                dagre: 5,
             }
 
             const getLayoutOpts = () => {
@@ -265,7 +266,10 @@
                 })
             });
 
-            const debouncedLayout = debounce(() => { cy.layout(getLayoutOpts()).run();}, layoutDebounce[state.config.defaultGraphLayoutAlgorithm]);
+            const debouncedLayout = debounce(() => {
+                cy.layout(getLayoutOpts()).run();
+                vscode.setState(state)
+            }, layoutDebounce[state.config.defaultGraphLayoutAlgorithm]);
             methods = {
                 setParams: function(newParams) {
                     state = {...state, ...newParams}
@@ -284,8 +288,6 @@
 					resetHighlights()
 
 					debouncedLayout();
-					
-					vscode.setState(state)
                 },
             }
 
@@ -300,6 +302,7 @@
                     style: getCyStyle(),
                     elements: state.elems,
                 });
+                cy.layout(getLayoutOpts()).run();
                 
                 cy.on('tap', function(e) {
                     if (e.target !== cy) {

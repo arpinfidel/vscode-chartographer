@@ -1,13 +1,6 @@
 import * as vscode from 'vscode'
-import {
-    CallHierarchy,
-    getCallHierarchy,
-} from './call'
-import { CyNode, Element, generateGraph as generateGraph } from './graph'
-import { getHtmlContent } from './html'
-import * as path from 'path'
-import * as fs from 'fs'
-import EventEmitter = require('events')
+import { buildWebview, getSelectedFunctions, lastFocusedPanel, registerWebviewPanelSerializer } from './webview'
+import { getCyNodes, getNode } from './graph'
 
 export const output = vscode.window.createOutputChannel('Chartographer')
 
@@ -19,199 +12,78 @@ const getDefaultProgressOptions = (title: string): vscode.ProgressOptions => {
     }
 }
 
-type State = {
-    elems: Element[],
-}
-
-type Params = {
-    direction: 'Incoming' | 'Outgoing' | 'Both',
-    entryPoint: vscode.CallHierarchyItem,
-}
-
-const buildWebview = (
-    context: vscode.ExtensionContext,
-    direction: 'Incoming' | 'Outgoing' | 'Both',
-) => {
-    return async () => {
-        const activeTextEditor = vscode.window.activeTextEditor!
-        const entry: vscode.CallHierarchyItem[] =
-            await vscode.commands.executeCommand(
-                'vscode.prepareCallHierarchy',
-                activeTextEditor.document.uri,
-                activeTextEditor.selection.active
-            )
-        if (!entry || !entry[0]) {
-            const msg = "Can't resolve entry function"
-            vscode.window.showErrorMessage(msg)
-            throw new Error(msg)
-        }
-
-        const webviewType = `Chartographer.previewCallGraph`
-        const panel = vscode.window.createWebviewPanel(
-            webviewType,
-            `Chartographer Call Graph`,
-            vscode.ViewColumn.Beside,
-            {enableScripts: true}
-        )
-        
-        const { handler, html } = setupCallGraph(context, panel, {direction, entryPoint: entry[0]})
-
-        panel.webview.onDidReceiveMessage(handler)
-        panel.webview.html = html
-    }
-}
-
-const registerWebviewPanelSerializer = (
-    context: vscode.ExtensionContext,
-) => {
-    vscode.window.registerWebviewPanelSerializer(`Chartographer.previewCallGraph`, 
-        {
-            async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-                if (!state) {
-                    vscode.window.showErrorMessage(
-                        'Chartographer: fail to load previous state'
-                    )
-                    return
-                }
-
-                const { handler, html } = setupCallGraph(context, webviewPanel, undefined, state)
-
-                webviewPanel.webview.html = html
-                webviewPanel.webview.onDidReceiveMessage(handler)
-            }
-        }
-    )
-}
-
-function setupCallGraph(
-    context: vscode.ExtensionContext,
-    panel: vscode.WebviewPanel,
-    params?: Params,
-    state?: State,
-) {
-    const html = getHtmlContent(context)
-    const configs = vscode.workspace.getConfiguration('chartographer')
-    const config = {
-        highlightRoots: configs.get<boolean>('highlightRoots'),
-        highlightLeaves: configs.get<boolean>('highlightLeaves'),
-        defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
+function findLongestCommonPrefix(strs: string[]): string {
+    if (strs.length === 0) {
+        return "";
     }
 
-    const nodes: { [key: string]: Element}  = {}
-    const addElems = (elems: Element[]) => {
-        for (const node of elems) {
-            if (nodes[node.data.id]) continue
-            nodes[node.data.id] = node
-        }
-        panel.webview.postMessage({
-            type: 'addElems',
-            data: elems,
-        })
-    }
-    const addEdge = (edge: CallHierarchy) => {
-        const elems = generateGraph(edge)
-        addElems(elems)
-    }
+    // Sort the array to bring potentially common prefixes together
+    strs.sort();
 
-    const handler = async (msg: any) => {
-        switch (msg.type) {
-            case 'state':
-                switch (msg.data) {
-                    case 'loaded':
-                        panel.webview.postMessage({
-                            type: 'setParams',
-                            data: {
-                                config,
-                            },
-                        })
-                    case 'ready':
-                        if (params) {
-                            await getCallHierarchy(params.direction, params.entryPoint, addEdge)
-                        }
-                        if (state) {
-                            for (const node of state.elems) {
-                                if (nodes[node.data.id]) continue
-                                nodes[node.data.id] = node
-                            }
-                            panel.webview.postMessage({
-                                type: 'addElems',
-                                data: state.elems,
-                            })
-                        }
-                }
+    const firstStr = strs[0];
+    const lastStr = strs[strs.length - 1];
+    let prefix = "";
 
-            case 'goToFunction':
-                const node = nodes[msg.data] as CyNode
-                if (!node) return
-
-                const range = new vscode.Range(
-                    node.data.line,
-                    0,
-                    node.data.line,
-                    0
-                )
-                vscode.window.showTextDocument(node.data.uri, {
-                    selection: range,
-                    preview: true,
-                    viewColumn: vscode.ViewColumn.One,
-                })
-            
-            case 'expandBoth':
-                // const uri = vscode.Uri.file(msg.data.uri.fsPath)
-                const position = new vscode.Position(msg.data.line, msg.data.character)
-                const item: vscode.CallHierarchyItem[] =
-                    await vscode.commands.executeCommand(
-                        'vscode.prepareCallHierarchy',
-                        vscode.Uri.parse(msg.data.uri.external),
-                        position,
-                    )
-                if (!item || !item[0]) {
-                    const msg = "Can't resolve entry function"
-                    vscode.window.showErrorMessage(msg)
-                    throw new Error(msg)
-                }
-
-                await getCallHierarchy('Both', item[0], addEdge)
+    for (let i = 0; i < firstStr.length; i++) {
+        if (firstStr.charAt(i) === lastStr.charAt(i)) {
+            prefix += firstStr.charAt(i);
+        } else {
+            break;
         }
     }
-    return { handler, html }
+
+    return prefix;
 }
 
 export function activate(context: vscode.ExtensionContext) {
-    // TODO: use this
-    const onReceiveMsg = (msg: any) => {
-    }
-    const incomingDisposable = vscode.commands.registerCommand(
-        'Chartographer.showIncomingCallGraph',
-        async () => {
-            vscode.window.withProgress(
-                getDefaultProgressOptions('Generate call graph'),
-                buildWebview(context, 'Incoming')
-            )
-        }
-    )
-    const outgoingDisposable = vscode.commands.registerCommand(
-        'Chartographer.showOutgoingCallGraph',
-        async () => {
-            vscode.window.withProgress(
-                getDefaultProgressOptions('Generate call graph'),
-                buildWebview(context, 'Outgoing')
-            )
-        }
-    )
+    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
+    const workspaceRoot = findLongestCommonPrefix(roots)
+
+    registerWebviewPanelSerializer(context, workspaceRoot)
+
     const disposable = vscode.commands.registerCommand(
         'Chartographer.showCallGraph',
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
-                buildWebview(context, 'Both')
+                buildWebview(context, workspaceRoot, 'Both')
             )
         }
     )
-    
-    registerWebviewPanelSerializer(context)
-
-    context.subscriptions.push(incomingDisposable)
-    context.subscriptions.push(outgoingDisposable)
     context.subscriptions.push(disposable)
+
+    const incomingDisposable = vscode.commands.registerCommand(
+        'Chartographer.showIncomingCallGraph',
+        async () => {
+            vscode.window.withProgress(
+                getDefaultProgressOptions('Generate call graph'),
+                buildWebview(context, workspaceRoot, 'Incoming')
+            )
+        }
+    )
+    context.subscriptions.push(incomingDisposable)
+
+    const outgoingDisposable = vscode.commands.registerCommand(
+        'Chartographer.showOutgoingCallGraph',
+        async () => {
+            vscode.window.withProgress(
+                getDefaultProgressOptions('Generate call graph'),
+                buildWebview(context, workspaceRoot, 'Outgoing')
+            )
+        }
+    )
+    context.subscriptions.push(outgoingDisposable)
+
+    const addHierarchy = vscode.commands.registerCommand(
+        'Chartographer.addHierarchy',
+        async () => {
+            const entries = await getSelectedFunctions()
+            if (lastFocusedPanel) {
+                lastFocusedPanel.addElems(
+                    entries.flatMap((entry) => getCyNodes(getNode(workspaceRoot, entry)))
+                )
+            }
+        }
+    )
+    context.subscriptions.push(addHierarchy)
 }

@@ -2,7 +2,7 @@
     "name": "chartographer",
     "displayName": "Chartographer",
     "description": "Easily visualize function call hierarchy in a neat graph representation",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "publisher": "ArpinFidel",
     "engines": {
         "vscode": "^1.65.0"
@@ -27,6 +27,10 @@
             {
                 "command": "Chartographer.showCallGraph",
                 "title": "Chartographer: Show call graph"
+            },
+            {
+                "command": "Chartographer.addHierarchy",
+                "title": "Chartographer: Add function to existing graph"
             }
         ],
         "menus": {
@@ -39,6 +43,9 @@
                 },
                 {
                     "command": "Chartographer.showCallGraph"
+                },
+                {
+                    "command": "Chartographer.addHierarchy"
                 }
             ]
         },

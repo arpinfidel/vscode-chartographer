@@ -1,53 +1,22 @@
 import { CallHierarchy } from "./call"
 import * as vscode from 'vscode'
 
-function findLongestCommonPrefix(strs: string[]): string {
-    if (strs.length === 0) {
-        return "";
-    }
-
-    // Sort the array to bring potentially common prefixes together
-    strs.sort();
-
-    const firstStr = strs[0];
-    const lastStr = strs[strs.length - 1];
-    let prefix = "";
-
-    for (let i = 0; i < firstStr.length; i++) {
-        if (firstStr.charAt(i) === lastStr.charAt(i)) {
-            prefix += firstStr.charAt(i);
-        } else {
-            break;
-        }
-    }
-
-    return prefix;
+export const getNode = (workspaceRoot: string, n: vscode.CallHierarchyItem) => {
+    // Create a node with a name based on the URI, item name, and range.
+    const uri = n.uri.toString().replace(workspaceRoot, '')
+    return {
+        id: `"${uri}#${n.name}@${n.range.start.line}:${n.range.start.character}"`,
+        name: n.name,
+        file: uri,
+        uri: n.uri,
+        line: n.range.start.line, //`${n.range.start.line}:${n.range.start.character}`,
+        character: n.range.start.character,
+    } as Node;
 }
 
-
-export function generateGraph(edge: CallHierarchy) {
-    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
-    const root = findLongestCommonPrefix(roots)
-
-    // Define a function to create a node for a CallHierarchy.
-    const getNode = (n: vscode.CallHierarchyItem) => {
-        // Create a node with a name based on the URI, item name, and range.
-        const uri = n.uri.toString().replace(root, '')
-        return {
-            id: `"${uri}#${n.name}@${n.range.start.line}:${n.range.start.character}"`,
-            name: n.name,
-            file: uri,
-            uri: n.uri,
-            line: n.range.start.line, //`${n.range.start.line}:${n.range.start.character}`,
-            character: n.range.start.character,
-        } as Node;
-    }
-
-    const elems: Element[] = []
-
-    // Define a function to insert a node and its children into the graph.
-    const insertNode = (n: Node) => {
-        elems.push({
+export const getCyNodes = (n: Node) => {
+    return [
+        {
             group: 'nodes',
             data: {
                 id: `node:${n.id}`,
@@ -57,9 +26,8 @@ export function generateGraph(edge: CallHierarchy) {
                 line: n.line,
                 character: n.character,
             }
-        })
-
-        elems.push({
+        } as CyNode,
+        {
             group: 'nodes',
             data: {
                 id: `file:${n.file}`,
@@ -69,16 +37,20 @@ export function generateGraph(edge: CallHierarchy) {
                 character: 0,
             },
             classes: 'compound'
-        })
-    }
+        } as CyNode,
+    ]
+}
+
+export function getCyElems(workspaceRoot: string, edge: CallHierarchy) {
+    const elems: Element[] = []
 
     // Iterate through the children of the CallHierarchy.
-    const node = getNode(edge.item);
-    insertNode(node);
+    const node = getNode(workspaceRoot, edge.item);
+    elems.push(...getCyNodes(node))
     
     if (edge.from) {
-        const from = getNode(edge.from);
-        insertNode(from);
+        const from = getNode(workspaceRoot, edge.from);
+        elems.push(...getCyNodes(from))
         elems.push({
             group: 'edges',
             data: {
@@ -88,8 +60,8 @@ export function generateGraph(edge: CallHierarchy) {
             }
         })
     } else if (edge.to) {
-        const to = getNode(edge.to);
-        insertNode(to);
+        const to = getNode(workspaceRoot, edge.to);
+        elems.push(...getCyNodes(to))
         elems.push({
             group: 'edges',
             data: {

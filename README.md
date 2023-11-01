@@ -9,17 +9,19 @@ vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscap
 
 * show functions and methods grouped by file
 * display function calls and interface implementations
-* jump to function location on ctrl/cmd + click
+* jump to function location on `Ctrl/Cmd+LClick`
 * click on function to highlight connections
 * supports color themes
 * ignore files configurably (test files, etc)
-* alt click on a function to fetch connections
+* `Alt+LClick` on a function to fetch connections
+* add a function to an existing graph through `Ctrl+Shift+P`
 
 ## Quick start
 
 1. Move your editor cursor over a function name
-2. Run `Chartographer: Show outgoing call graph` command using `Ctrl+Shift+P` or context menu to show outgoing calls
-3. Or run `Chartographer: Show incoming call graph`
+2. Run `Chartographer: Show call graph` command using `Ctrl+Shift+P` or context menu to show calls
+3. Run `Chartographer: Add function to existing graph` to add function to last opened graph
+4. `Alt+LClick` on a node to fetch calls for that function
 
 ## Requirements
 
