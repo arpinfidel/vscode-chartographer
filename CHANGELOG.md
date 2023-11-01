@@ -36,3 +36,7 @@
 ## [1.0.9] 2023-10-31
 
 - Fix missing dependency
+
+## [1.0.9] 2023-11-01
+
+- Add options for graph layout algorithms

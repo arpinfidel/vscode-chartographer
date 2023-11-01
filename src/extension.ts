@@ -94,6 +94,7 @@ function setupCallGraph(
     const config = {
         highlightRoots: configs.get<boolean>('highlightRoots'),
         highlightLeaves: configs.get<boolean>('highlightLeaves'),
+        defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
     }
 
     const nodes: { [key: string]: Element}  = {}

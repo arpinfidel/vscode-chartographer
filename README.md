@@ -28,10 +28,11 @@ Chartographer relies on the "call hierarchy" feature of an LSP server. So, to us
 ## Upcoming Features
 
 * select multiple functions
-* graph layout options
+* change graph layout algorithm on the fly
 * dim test files
 * group by directory configuration
 * override colors configuration
+* export as image
 
 ### For more information
 

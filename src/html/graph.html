@@ -86,18 +86,74 @@
 
         <div id="cy" style="height:100vh"></div>
 
-        <!-- Include Cytoscape.js and Cytoscape Klay layout libraries from CDNs -->
         <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+        
         <script src="https://unpkg.com/klayjs@0.4.1/klay.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/cytoscape-klay@3.1.3/cytoscape-klay.min.js"></script>
 
+        <script src="https://cdn.jsdelivr.net/npm/elkjs@0.8.1/lib/elk.bundled.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/cytoscape-elk@2.2.0/dist/cytoscape-elk.min.js"></script>
+
+        <script src="https://unpkg.com/dagre@0.8.2/dist/dagre.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+
         <script>
+            // Debounce function
+            function debounce(func, delay) {
+                let timer;
+                return function() {
+                    clearTimeout(timer);
+                    timer = setTimeout(func, delay);
+                }
+            }
+
             const vscode = acquireVsCodeApi();
             const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+            let cy = null
             let state = {
+                config: {},
 				elems: [],
 			}
-			let cy = null
+
+            const layoutDebounce = {
+                klay: 100,
+                elk: 500,
+                dagre: 100,
+            }
+
+            const getLayoutOpts = () => {
+                return {
+                    // name: 'klay',
+                    // name: 'elk',
+                    // name: 'dagre',
+                    name: state.config.defaultGraphLayoutAlgorithm,
+                    animate: true,
+                    animationDuration: 250,
+                    klay: {
+                        addUnnecessaryBendpoints: false,
+                        direction: 'RIGHT',
+                        layoutHierarchy: true,
+                        spacing: 40,
+                        compactComponents: true,
+                        spacing: 5,
+                        thoroughness: 10,
+                        edgeSpacingFactor: 0.5,
+                        inLayerSpacingFactor: 2,
+                    },
+                    elk: {
+                        algorithm: 'layered',
+                        //'elk.direction': 'RIGHT',
+                    },
+                    // dagre
+                    rankDir: 'LR',
+                    rankSep: 15,
+                    nodeSep: 15,
+                    edgeSep: 15,
+                    // ranker: 'tight-tree',
+                    ranker: 'network-simplex',
+                }
+            }
+
 			const getCyStyle = () => {
                 const style = getComputedStyle(document.body);
                 const getStyle = (name) => style.getPropertyValue(name);
@@ -202,23 +258,6 @@
 				cy.nodes().data('isHighlighted', false)
 			}
 
-            const layoutOpts = {
-                name: 'klay',
-                animate: true,
-                animationDuration: 500,
-                klay: {
-                    addUnnecessaryBendpoints: false,
-                    direction: 'RIGHT',
-                    layoutHierarchy: true,
-                    spacing: 40,
-                    compactComponents: true,
-                    spacing: 5,
-                    thoroughness: 10,
-                    edgeSpacingFactor: 0.5,
-                    inLayerSpacingFactor: 2,
-                }
-            }
-
             document.addEventListener('DOMContentLoaded', function() {
                 vscode.postMessage({
                     type: 'state',
@@ -226,6 +265,7 @@
                 })
             });
 
+            const debouncedLayout = debounce(() => { cy.layout(getLayoutOpts()).run();}, layoutDebounce[state.config.defaultGraphLayoutAlgorithm]);
             methods = {
                 setParams: function(newParams) {
                     state = {...state, ...newParams}
@@ -238,14 +278,12 @@
                 addElems: function(newElems) {
 					state.elems = state.elems.concat(newElems)
 
-					const pan = cy.pan()
-
 					cy.add(newElems)
 					resetRootHighlights()
 					resetLeafHighlights()
 					resetHighlights()
-					
-					cy.layout(layoutOpts).run();
+
+					debouncedLayout();
 					
 					vscode.setState(state)
                 },
@@ -261,12 +299,8 @@
                     container: document.getElementById('cy'),
                     style: getCyStyle(),
                     elements: state.elems,
-                    layout: layoutOpts,
                 });
                 
-                // Apply the layout to the graph
-                cy.layout(layoutOpts).run();
-
                 cy.on('tap', function(e) {
                     if (e.target !== cy) {
                         return;
