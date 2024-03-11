@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import { buildWebview, getSelectedFunctions, lastFocusedPanel, registerWebviewPanelSerializer } from './webview'
 import { getCyNodes, getNode } from './graph'
 
-export const output = vscode.window.createOutputChannel('Chartographer')
+export const output = vscode.window.createOutputChannel('Chartographer-Extra')
 
 const getDefaultProgressOptions = (title: string): vscode.ProgressOptions => {
     return {
@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
     registerWebviewPanelSerializer(context, workspaceRoot)
 
     const disposable = vscode.commands.registerCommand(
-        'Chartographer.showCallGraph',
+        'Chartographer-Extra.showCallGraph',
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable)
 
     const incomingDisposable = vscode.commands.registerCommand(
-        'Chartographer.showIncomingCallGraph',
+        'Chartographer-Extra.showIncomingCallGraph',
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(incomingDisposable)
 
     const outgoingDisposable = vscode.commands.registerCommand(
-        'Chartographer.showOutgoingCallGraph',
+        'Chartographer-Extra.showOutgoingCallGraph',
         async () => {
             vscode.window.withProgress(
                 getDefaultProgressOptions('Generate call graph'),
@@ -75,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(outgoingDisposable)
 
     const addHierarchy = vscode.commands.registerCommand(
-        'Chartographer.addHierarchy',
+        'Chartographer-Extra.addHierarchy',
         async () => {
             const entries = await getSelectedFunctions()
             if (lastFocusedPanel) {

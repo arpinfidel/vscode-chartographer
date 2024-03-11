@@ -20,10 +20,10 @@ export const buildWebview = (
     return async () => {
         const entries: vscode.CallHierarchyItem[] = await getSelectedFunctions()
 
-        const webviewType = `Chartographer.previewCallGraph`
+        const webviewType = `Chartographer-Extra.previewCallGraph`
         const panel = vscode.window.createWebviewPanel(
             webviewType,
-            `Chartographer Call Graph`,
+            `Chartographer-Extra Call Graph`,
             vscode.ViewColumn.Beside,
             {enableScripts: true}
         )
@@ -39,12 +39,12 @@ export const registerWebviewPanelSerializer = (
     context: vscode.ExtensionContext,
 	workspaceRoot: string,
 ) => {
-    vscode.window.registerWebviewPanelSerializer(`Chartographer.previewCallGraph`, 
+    vscode.window.registerWebviewPanelSerializer(`Chartographer-Extra.previewCallGraph`, 
         {
             async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
                 if (!state) {
                     vscode.window.showErrorMessage(
-                        'Chartographer: fail to load previous state'
+                        'Chartographer-Extra: fail to load previous state'
                     )
                     return
                 }
@@ -86,7 +86,7 @@ export function setupCallGraph(
     state?: State,
 ) {
     const html = getHtmlContent(context)
-    const configs = vscode.workspace.getConfiguration('chartographer')
+    const configs = vscode.workspace.getConfiguration('chartographer-extra')
     const config = {
         highlightRoots: configs.get<boolean>('highlightRoots'),
         highlightLeaves: configs.get<boolean>('highlightLeaves'),

@@ -1,8 +1,8 @@
-# Chartographer
+# Chartographer-Extra
 
 A fork of [Call Graph](https://github.com/beicause/call-graph)
 
-![chartographer](https://raw.githubusercontent.com/arpinfidel/vscode-chartographer/master/assets/call-graph.png)
+![chartographer-extra](https://github.com/gusztavj/vscode-chartographer-improved/master/assets/call-graph.png)
 vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscape.org/) based on vscode call hierarchy language feature.
 
 ## Features
@@ -19,13 +19,13 @@ vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscap
 ## Quick start
 
 1. Move your editor cursor over a function name
-2. Run `Chartographer: Show call graph` command using `Ctrl+Shift+P` or context menu to show calls
-3. Run `Chartographer: Add function to existing graph` to add function to last opened graph
+2. Run `Chartographer-Extra: Show call graph` command using `Ctrl+Shift+P` or context menu to show calls
+3. Run `Chartographer-Extra: Add function to existing graph` to add function to last opened graph
 4. `Alt+LClick` on a node to fetch calls for that function
 
 ## Requirements
 
-Chartographer relies on the "call hierarchy" feature of an LSP server. So, to use Chartographer for your project analysis, you must have a language server extension that supports "call hierarchy."
+Chartographer-Extra relies on the "call hierarchy" feature of an LSP server. So, to use Chartographer-Extra for your project analysis, you must have a language server extension that supports "call hierarchy."
 
 ## Upcoming Features
 
@@ -38,6 +38,6 @@ Chartographer relies on the "call hierarchy" feature of an LSP server. So, to us
 
 ### For more information
 
-* [GitHub](https://github.com/arpinfidel/vscode-chartographer)
+* [GitHub](https://github.com/gusztavj/vscode-chartographer-improved)
 
 **Enjoy!**
