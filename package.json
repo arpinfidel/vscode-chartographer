@@ -75,6 +75,11 @@
                     "type": "boolean",
                     "default": true
                 },
+                "chartographer.ignoreAnalyzingThirdPartyPackages": {
+                    "description": "Don't analyze files/functions located in the physical or virtual environments (3rd party packages)",
+                    "type": "boolean",
+                    "default": true
+                },
                 "chartographer.defaultGraphLayoutAlgorithm": {
                     "description": "Default graph layout algorithm to use",
                     "type": "string",

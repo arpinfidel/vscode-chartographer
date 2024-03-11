@@ -25,6 +25,47 @@ export async function getCallHierarchy(
     const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
     const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
 
+    // Let the user choose to omit calls of functions in 3rd party and built-in packages
+    const ignoreAnalyzingThirdPartyPackages = configs.get<boolean>('chartographer.ignoreAnalyzingThirdPartyPackages') ?? false
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // Gather potential venv paths and other paths that may contain 3rd party packages 
+    // (to optionally exclude their calls from the graph)
+
+    // Two default paths offered by VS Code when creating a virtual environment
+    const dotVenv = ".venv";
+    const dotConda = ".conda";
+
+    // Start building paths to exclude by adding the default ones
+    let builtinPackagesPaths: string[] = [dotVenv, dotConda];
+
+    const pythonSettings = vscode.workspace.getConfiguration('python');    
+    
+    if (pythonSettings) {
+        
+        // Check if Python path is set and add it to the list of paths to exclude
+        const pyPath = pythonSettings.get('pythonPath');     
+        if (pyPath && typeof pyPath === 'string') {
+            builtinPackagesPaths.push(pyPath.toString())
+        }
+
+        // Check if 'Python: Venv folders' are specified, and add each to the list of paths to exclude
+        const venvFolders = pythonSettings.get<string[]>('venvFolders') ?? [];
+        for (const folder of venvFolders ?? []) {        
+            builtinPackagesPaths.push(folder)
+        }
+
+        // Check if 'Python: Venv Path' is defined and add it to the list of paths to exclude
+        const venvPath = pythonSettings.get('venvPath');     
+        if (venvPath && typeof venvPath === 'string') {
+            // Be prepared users may list multiple paths separated by comma or semicolon
+            for (const pathItem of venvPath.toString().split(/[;,]/)) {
+                builtinPackagesPaths.push(pathItem)
+            }
+            
+        }        
+    }
+
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
 
@@ -69,6 +110,21 @@ export async function getCallHierarchy(
                     skip = true
                 }
             }
+
+            if (ignoreAnalyzingThirdPartyPackages) { // don't follow functions in files located under venv directories
+
+                let isInVenv = false
+                for (const path of builtinPackagesPaths ?? []) {
+                    if (next.uri.fsPath.includes(path)) {
+                        isInVenv = true
+                        break
+                    }
+                }
+                if (isInVenv) {
+                    skip = true
+                }
+            }
+
             if (skip) return
 
             addEdge(edge)
