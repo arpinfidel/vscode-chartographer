@@ -56,6 +56,24 @@
         </style>
     </head>
     <body>
+        <div style="text-align: center;">
+            <h1 id="chart-title"></h1>
+            <button id="saveGraphBtn">Save Graph as PNG</button>
+            <script>                
+                // Event handler to respond when clicking Save Graph as PNG button
+                document.getElementById('saveGraphBtn').addEventListener('click', function() {
+                    // Generate the PNG data
+                    var png64 = cy.png(); 
+
+                    // Send the PNG data to the extension's backend for saving
+                    vscode.postMessage({
+                            type: 'savePNG',
+                            data: png64
+                        });
+
+                });
+            </script>
+        </div>   
         <script>
             // Function to toggle the visibility of instructions
             function toggleInstructions() {
@@ -80,7 +98,7 @@
             <p>Left Click to highlight connections</p>
             <p>Left Click and drag to pan</p>
             <p>Scroll to zoom</p>
-            <p>Alt/Opt + Left Click to expand graph</p>
+            <p>Alt/Opt + Left Click to expand graph</p>                   
             <div id="hide-text">Click to hide</div>
         </div>
 
@@ -382,5 +400,6 @@
                 });
             }
         </script>
+  
     </body>
 </html>
