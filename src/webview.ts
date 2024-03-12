@@ -2,9 +2,12 @@ import * as vscode from 'vscode'
 import { CyNode, Element, getCyElems } from './graph'
 import { getHtmlContent } from './html'
 import { CallHierarchy, getCallHierarchy } from './call'
+import { fileURLToPath } from 'url'
 
 type State = {
     elems: Element[],
+    
+    title: string
 }
 
 type Params = {
@@ -20,13 +23,16 @@ export const buildWebview = (
     return async () => {
         const entries: vscode.CallHierarchyItem[] = await getSelectedFunctions()
 
-        const webviewType = `Chartographer.previewCallGraph`
+        const webviewType = `Chartographer-Extra.previewCallGraph`
         const panel = vscode.window.createWebviewPanel(
             webviewType,
-            `Chartographer Call Graph`,
+            `Chartographer-Extra Call Graph`,
             vscode.ViewColumn.Beside,
             {enableScripts: true}
         )
+
+        rootFile = entries[0].uri    
+        rootFunction = entries[0].name
         
         const { handler, html } = setupCallGraph(context, workspaceRoot, panel, {direction, entryPoints: entries})
 
@@ -39,12 +45,12 @@ export const registerWebviewPanelSerializer = (
     context: vscode.ExtensionContext,
 	workspaceRoot: string,
 ) => {
-    vscode.window.registerWebviewPanelSerializer(`Chartographer.previewCallGraph`, 
+    vscode.window.registerWebviewPanelSerializer(`Chartographer-Extra.previewCallGraph`, 
         {
             async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
                 if (!state) {
                     vscode.window.showErrorMessage(
-                        'Chartographer: fail to load previous state'
+                        'Chartographer-Extra: failed to load previous state'
                     )
                     return
                 }
@@ -58,6 +64,16 @@ export const registerWebviewPanelSerializer = (
     )
 }
 
+
+
+// Store the URI of the file containing the function for which graph was requested.
+// Will be used to construct default file name for saving the graph as an image.
+var rootFile: vscode.Uri 
+
+// Store the name of the function for which graph was requested.
+// Will be used to construct default file name for saving the graph as an image.
+var rootFunction = ""
+
 export async function getSelectedFunctions() {
 	const activeTextEditor = vscode.window.activeTextEditor!
 	const entry: vscode.CallHierarchyItem[] = await vscode.commands.executeCommand(
@@ -70,14 +86,17 @@ export async function getSelectedFunctions() {
 		vscode.window.showErrorMessage(msg)
 		throw new Error(msg)
 	}
+
 	return entry
 }
+
 
 export let lastFocusedPanel: {
 	panel: vscode.WebviewPanel,
 	addElems: (elems: Element[]) => void,
 	addEdge: (edge: CallHierarchy) => void,
 } | undefined = undefined
+
 export function setupCallGraph(
     context: vscode.ExtensionContext,
 	workspaceRoot: string,
@@ -91,7 +110,15 @@ export function setupCallGraph(
         highlightRoots: configs.get<boolean>('highlightRoots'),
         highlightLeaves: configs.get<boolean>('highlightLeaves'),
         defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
-    }
+    }    
+    
+    // Try to compile graph title
+    // TODO: Try to serialize this as the value can only be computed when first generating a graph
+    const title = 
+        (params && params?.entryPoints[0].uri && params?.entryPoints[0]) 
+        ? 'Call graph for ' + params.entryPoints[0].uri.toString().replace(workspaceRoot.toString(), '').replace(/\//g, '-').substring(1) + '-' + params.entryPoints[0].name 
+        : null;
+
 
 	// panel.onDidChangeViewState((e) => {
 	// 	if (panel.visible) {
@@ -135,7 +162,7 @@ export function setupCallGraph(
                         
                         if (params) {
 							Promise.all(params.entryPoints.map(async (entry) => {
-								await getCallHierarchy(params.direction, entry, addEdge)
+								await getCallHierarchy(params.direction, entry, "", addEdge)
 							}))
                         }
                         if (state) {
@@ -181,7 +208,47 @@ export function setupCallGraph(
                     throw new Error(msg)
                 }
 
-                await getCallHierarchy('Both', item[0], addEdge)
+                await getCallHierarchy('Both', item[0], "", addEdge)
+
+            case 'savePNG':
+                const data = msg.data; // The PNG data URL
+                // Convert data URL to bytes
+                const match = data.match(/^data:.+\/(.+);base64,(.*)$/);
+                const buffer = Buffer.from(match[2], 'base64');
+                
+                var defaultFileName = ""
+
+                // try {
+                //     const relativeFileName = rootFile.toString().replace(workspaceRoot.toString(), '').replace(/\//g, '-').substring(1)                
+                //     defaultFileName = `Call graph for ${relativeFileName}-${rootFunction}.png`;
+                // } catch {
+                //     defaultFileName = "Call graph"
+                // }
+
+                if (title) {
+                    try {                    
+                        defaultFileName = `${title}.png`;
+                    } catch {
+                        defaultFileName = "Call graph.png"
+                    }
+                } else {
+                    defaultFileName = "Call graph.png"
+                }
+                
+                // Prompt the user for a save location
+                const uri = await vscode.window.showSaveDialog({
+                    filters: {
+                        'PNG images (*.png)': ['*.png'],
+                        'All files (*.*)': ['*.*']
+                    },
+                    defaultUri: vscode.Uri.file(defaultFileName)
+                });
+                
+                if (uri) {
+                    // Use VS Code's filesystem API to write the file
+                    await vscode.workspace.fs.writeFile(uri, buffer);
+                    vscode.window.showInformationMessage('Graph saved as PNG.');
+                }
         }
     }
     return { handler, html }

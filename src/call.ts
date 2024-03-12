@@ -8,16 +8,20 @@ export interface CallHierarchy {
     item: CallHierarchyItem
     from?: CallHierarchyItem
     to?: CallHierarchyItem
+
+    sequenceNumber?: string
 }
 
 export async function getCallHierarchy(
-    direction: 'Incoming' | 'Outgoing' | 'Both',
-    root: CallHierarchyItem,
-    addEdge: (edge: CallHierarchy) => void
-) {
+        direction: 'Incoming' | 'Outgoing' | 'Both',
+        root: CallHierarchyItem,
+        parentSequenceNumber: string,
+        addEdge: (edge: CallHierarchy) => void
+    ) 
+{
     if (direction === 'Both') {
-        await getCallHierarchy('Incoming', root, addEdge)
-        await getCallHierarchy('Outgoing', root, addEdge)
+        await getCallHierarchy('Incoming', root, parentSequenceNumber, addEdge)
+        await getCallHierarchy('Outgoing', root, parentSequenceNumber, addEdge)
         return
     }
 
@@ -25,10 +29,53 @@ export async function getCallHierarchy(
     const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
     const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
 
+    // Let the user choose to omit calls of functions in 3rd party and built-in packages
+    const ignoreAnalyzingThirdPartyPackages = configs.get<boolean>('chartographer.ignoreAnalyzingThirdPartyPackages') ?? false
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // Gather potential venv paths and other paths that may contain 3rd party packages 
+    // (to optionally exclude their calls from the graph)
+
+    // Two default paths offered by VS Code when creating a virtual environment
+    const dotVenv = ".venv";
+    const dotConda = ".conda";
+
+    // Start building paths to exclude by adding the default ones
+    let builtinPackagesPaths: string[] = [dotVenv, dotConda];
+
+    const pythonSettings = vscode.workspace.getConfiguration('python');    
+    
+    if (pythonSettings) {
+        
+        // Check if Python path is set and add it to the list of paths to exclude
+        const pyPath = pythonSettings.get('pythonPath');     
+        if (pyPath && typeof pyPath === 'string') {
+            builtinPackagesPaths.push(pyPath.toString())
+        }
+
+        // Check if 'Python: Venv folders' are specified, and add each to the list of paths to exclude
+        const venvFolders = pythonSettings.get<string[]>('venvFolders') ?? [];
+        for (const folder of venvFolders ?? []) {        
+            builtinPackagesPaths.push(folder)
+        }
+
+        // Check if 'Python: Venv Path' is defined and add it to the list of paths to exclude
+        const venvPath = pythonSettings.get('venvPath');     
+        if (venvPath && typeof venvPath === 'string') {
+            // Be prepared users may list multiple paths separated by comma or semicolon
+            for (const pathItem of venvPath.toString().split(/[;,]/)) {
+                builtinPackagesPaths.push(pathItem)
+            }
+            
+        }        
+    }
+
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
+    
+    var edgeSequenceNumber: string;
 
-    const traverse = async (node: CallHierarchyItem) => {
+    const traverse = async (node: CallHierarchyItem, parentSequenceNumber: string) => {
         output.appendLine('resolve: ' + node.name)
         const id  = `"${node.uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
 
@@ -39,9 +86,14 @@ export async function getCallHierarchy(
             | vscode.CallHierarchyOutgoingCall[]
             | vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand(command, node)
 
+        var localSequenceNumberIx: number = 0;
+            
         await Promise.all(calls.map(async (call) => {
             let next: CallHierarchyItem
             let edge: CallHierarchy
+            
+            
+            
             if (call instanceof vscode.CallHierarchyOutgoingCall) {
                 edge = { item: node, to: call.to }
                 next = call.to
@@ -69,14 +121,48 @@ export async function getCallHierarchy(
                     skip = true
                 }
             }
+
+            if (ignoreAnalyzingThirdPartyPackages) { // don't follow functions in files located under venv directories
+
+                let isInVenv = false
+                for (const path of builtinPackagesPaths ?? []) {
+                    if (next.uri.fsPath.includes(path)) {
+                        isInVenv = true
+                        break
+                    }
+                }
+                if (isInVenv) {
+                    skip = true
+                }
+            }
+
             if (skip) return
 
+            localSequenceNumberIx++;
+
+            // Assemble label based on call direction and nesting level
+            if (call instanceof vscode.CallHierarchyOutgoingCall) {
+                edgeSequenceNumber = 
+                    (parentSequenceNumber === "") 
+                    ? `${localSequenceNumberIx.toString()}` 
+                    : `${parentSequenceNumber}.${localSequenceNumberIx.toString()}`;
+            } else {
+                edgeSequenceNumber = 
+                    (parentSequenceNumber === "") 
+                    ? `\u21A3 ${localSequenceNumberIx.toString()}` 
+                    : parentSequenceNumber.startsWith('\u21A3') 
+                        ? `${localSequenceNumberIx.toString()} ${parentSequenceNumber}`
+                        : `${localSequenceNumberIx.toString()} \u21A3 ${parentSequenceNumber}`;
+            }
+
+            edge.sequenceNumber = edgeSequenceNumber
+
             addEdge(edge)
-            await traverse(next)
+            await traverse(next, edgeSequenceNumber)
         }))
     }
 
-    await traverse(root)
+    await traverse(root, "")
 }
 
 function isEqual(a: CallHierarchyItem, b: CallHierarchyItem) {

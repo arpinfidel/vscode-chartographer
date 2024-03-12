@@ -11,46 +11,46 @@
         "Visualization"
     ],
     "activationEvents": [
-        "onWebviewPanel:Chartographer.previewCallGraph"
+        "onWebviewPanel:Chartographer-Extra.previewCallGraph"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "Chartographer.showOutgoingCallGraph",
+                "command": "Chartographer-Extra.showOutgoingCallGraph",
                 "title": "Chartographer: Show outgoing call graph"
             },
             {
-                "command": "Chartographer.showIncomingCallGraph",
+                "command": "Chartographer-Extra.showIncomingCallGraph",
                 "title": "Chartographer: Show incoming call graph"
             },
             {
-                "command": "Chartographer.showCallGraph",
+                "command": "Chartographer-Extra.showCallGraph",
                 "title": "Chartographer: Show call graph"
             },
             {
-                "command": "Chartographer.addHierarchy",
+                "command": "Chartographer-Extra.addHierarchy",
                 "title": "Chartographer: Add function to existing graph"
             }
         ],
         "menus": {
             "editor/context": [
                 {
-                    "command": "Chartographer.showOutgoingCallGraph"
+                    "command": "Chartographer-Extra.showOutgoingCallGraph"
                 },
                 {
-                    "command": "Chartographer.showIncomingCallGraph"
+                    "command": "Chartographer-Extra.showIncomingCallGraph"
                 },
                 {
-                    "command": "Chartographer.showCallGraph"
+                    "command": "Chartographer-Extra.showCallGraph"
                 },
                 {
-                    "command": "Chartographer.addHierarchy"
+                    "command": "Chartographer-Extra.addHierarchy"
                 }
             ]
         },
         "configuration": {
-            "title": "Chartographer",
+            "title": "chartographer",
             "properties": {
                 "chartographer.ignoreOnGenerate": {
                     "description": "Glob patterns of files to ignore when fetching call hierarchy for the call graph",
@@ -72,6 +72,11 @@
                 },
                 "chartographer.ignoreNonWorkspaceFiles": {
                     "description": "Ignore files that are not part of the current workspace",
+                    "type": "boolean",
+                    "default": true
+                },
+                "chartographer.ignoreAnalyzingThirdPartyPackages": {
+                    "description": "Don't analyze files/functions located in the physical or virtual environments (3rd party packages)",
                     "type": "boolean",
                     "default": true
                 },
@@ -113,14 +118,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/arpinfidel/vscode-chartographer.git"
+        "url": "https://github.com/gusztavj/vscode-chartographer-improved.git"
     },
     "license": "Apache",
     "icon": "assets/icon.png",
     "bugs": {
-        "url": "https://github.com/arpinfidel/vscode-chartographer/issues"
+        "url": "https://github.com/gusztavj/vscode-chartographer-improved/issues"
     },
-    "homepage": "https://github.com/arpinfidel/vscode-chartographer/blob/master/README.md",
+    "homepage": "https://github.com/gusztavj/vscode-chartographer-improved/blob/master/README.md",
     "keywords": [
         "graphviz",
         "call graph",
