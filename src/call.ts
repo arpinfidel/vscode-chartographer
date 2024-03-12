@@ -26,11 +26,11 @@ export async function getCallHierarchy(
     }
 
     const configs = vscode.workspace.getConfiguration()
-    const ignoreGlobs = configs.get<string[]>('chartographer-extra.ignoreOnGenerate') ?? []
-    const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer-extra.ignoreNonWorkspaceFiles') ?? false
+    const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
+    const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
 
     // Let the user choose to omit calls of functions in 3rd party and built-in packages
-    const ignoreAnalyzingThirdPartyPackages = configs.get<boolean>('chartographer-extra.ignoreAnalyzingThirdPartyPackages') ?? false
+    const ignoreAnalyzingThirdPartyPackages = configs.get<boolean>('chartographer.ignoreAnalyzingThirdPartyPackages') ?? false
 
     // ----------------------------------------------------------------------------------------------------------------------------
     // Gather potential venv paths and other paths that may contain 3rd party packages 

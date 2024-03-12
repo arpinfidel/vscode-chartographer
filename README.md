@@ -2,7 +2,7 @@
 
 A fork of [Call Graph](https://github.com/beicause/call-graph)
 
-![chartographer-extra](https://github.com/gusztavj/vscode-chartographer-improved/master/assets/call-graph.png)
+![chartographer](https://github.com/gusztavj/vscode-chartographer-improved/master/assets/call-graph.png)
 vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscape.org/) based on vscode call hierarchy language feature.
 
 ## Features

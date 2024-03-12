@@ -105,7 +105,7 @@ export function setupCallGraph(
     state?: State,
 ) {
     const html = getHtmlContent(context)
-    const configs = vscode.workspace.getConfiguration('chartographer-extra')
+    const configs = vscode.workspace.getConfiguration('chartographer')
     const config = {
         highlightRoots: configs.get<boolean>('highlightRoots'),
         highlightLeaves: configs.get<boolean>('highlightLeaves'),

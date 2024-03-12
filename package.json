@@ -1,6 +1,6 @@
 {
-    "name": "chartographer-extra",
-    "displayName": "Chartographer Extra",
+    "name": "chartographer",
+    "displayName": "Chartographer",
     "description": "Easily visualize function call hierarchy in a neat graph representation",
     "version": "1.0.12",
     "publisher": "ArpinFidel",
@@ -18,19 +18,19 @@
         "commands": [
             {
                 "command": "Chartographer-Extra.showOutgoingCallGraph",
-                "title": "Chartographer Extra: Show outgoing call graph"
+                "title": "Chartographer: Show outgoing call graph"
             },
             {
                 "command": "Chartographer-Extra.showIncomingCallGraph",
-                "title": "Chartographer Extra: Show incoming call graph"
+                "title": "Chartographer: Show incoming call graph"
             },
             {
                 "command": "Chartographer-Extra.showCallGraph",
-                "title": "Chartographer Extra: Show call graph"
+                "title": "Chartographer: Show call graph"
             },
             {
                 "command": "Chartographer-Extra.addHierarchy",
-                "title": "Chartographer Extra: Add function to existing graph"
+                "title": "Chartographer: Add function to existing graph"
             }
         ],
         "menus": {
@@ -50,9 +50,9 @@
             ]
         },
         "configuration": {
-            "title": "chartographer-extra",
+            "title": "chartographer",
             "properties": {
-                "chartographer-extra.ignoreOnGenerate": {
+                "chartographer.ignoreOnGenerate": {
                     "description": "Glob patterns of files to ignore when fetching call hierarchy for the call graph",
                     "type": "array",
                     "items": {
@@ -60,27 +60,27 @@
                     },
                     "default": []
                 },
-                "chartographer-extra.highlightRoots": {
+                "chartographer.highlightRoots": {
                     "description": "Color root nodes in the call graph",
                     "type": "boolean",
                     "default": true
                 },
-                "chartographer-extra.highlightLeaves": {
+                "chartographer.highlightLeaves": {
                     "description": "Color leaf nodes in the call graph",
                     "type": "boolean",
                     "default": false
                 },
-                "chartographer-extra.ignoreNonWorkspaceFiles": {
+                "chartographer.ignoreNonWorkspaceFiles": {
                     "description": "Ignore files that are not part of the current workspace",
                     "type": "boolean",
                     "default": true
                 },
-                "chartographer-extra.ignoreAnalyzingThirdPartyPackages": {
+                "chartographer.ignoreAnalyzingThirdPartyPackages": {
                     "description": "Don't analyze files/functions located in the physical or virtual environments (3rd party packages)",
                     "type": "boolean",
                     "default": true
                 },
-                "chartographer-extra.defaultGraphLayoutAlgorithm": {
+                "chartographer.defaultGraphLayoutAlgorithm": {
                     "description": "Default graph layout algorithm to use",
                     "type": "string",
                     "enum": [
