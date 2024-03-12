@@ -31,7 +31,7 @@
                 margin-top: 5px; /* Add some top margin for spacing */
             }
 
-            #question-mark {
+            #question-mark, #save-image {
                 position: absolute;
                 top: 10px;
                 left: 10px;
@@ -49,30 +49,23 @@
                 justify-content: center;
                 align-items: center;
             }
+
+            #save-image {
+                position: absolute;
+                left: 60px;
+                width: 80px;
+            }
     
-            #question-mark:hover {
-                text-decoration: underline;
+            #question-mark:hover, #save-image:hover {
+                background-color: rgba(165, 42, 42, 0.3);
             }
         </style>
+        <script src="https://kit.fontawesome.com/e24e37fc58.js" crossorigin="anonymous"></script>
     </head>
     <body>
         <div style="text-align: center;">
             <h1 id="chart-title"></h1>
-            <button id="saveGraphBtn">Save Graph as PNG</button>
-            <script>                
-                // Event handler to respond when clicking Save Graph as PNG button
-                document.getElementById('saveGraphBtn').addEventListener('click', function() {
-                    // Generate the PNG data
-                    var png64 = cy.png(); 
-
-                    // Send the PNG data to the extension's backend for saving
-                    vscode.postMessage({
-                            type: 'savePNG',
-                            data: png64
-                        });
-
-                });
-            </script>
+            
         </div>   
         <script>
             // Function to toggle the visibility of instructions
@@ -91,7 +84,22 @@
 
         <!-- Question Mark Button -->
         <div id="question-mark" onclick="toggleInstructions()">&#63;</div>
+        <div id="save-image">SAVE</i>
+            <script>                
+                // Event handler to respond when clicking Save Graph as PNG button
+                document.getElementById('save-image').addEventListener('click', function() {
+                    // Generate the PNG data
+                    var png64 = cy.png(); 
 
+                    // Send the PNG data to the extension's backend for saving
+                    vscode.postMessage({
+                            type: 'savePNG',
+                            data: png64
+                        });
+
+                });
+            </script>
+        </div>
         <!-- Instructions (Initially hidden) -->
         <div id="instructions" style="display: none;" onclick="toggleInstructions()">
             <p>Ctrl/Cmd + Left Click to go to function</p>
@@ -100,6 +108,23 @@
             <p>Scroll to zoom</p>
             <p>Alt/Opt + Left Click to expand graph</p>                   
             <div id="hide-text">Click to hide</div>
+            <div style="text-align: center;">
+            <a href="#" id="saveGraphBtn">Save Graph as PNG</a>
+                <script>                
+                    // Event handler to respond when clicking Save Graph as PNG button
+                    document.getElementById('saveGraphBtn').addEventListener('click', function() {
+                        // Generate the PNG data
+                        var png64 = cy.png(); 
+
+                        // Send the PNG data to the extension's backend for saving
+                        vscode.postMessage({
+                                type: 'savePNG',
+                                data: png64
+                            });
+
+                    });
+                </script>
+            </div>
         </div>
 
         <div id="cy" style="height:100vh"></div>

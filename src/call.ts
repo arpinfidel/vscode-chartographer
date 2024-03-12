@@ -139,8 +139,8 @@ export async function getCallHierarchy(
             if (skip) return
 
             localSequenceNumberIx++;
-            var edgeSequenceNumber = `${parentSequenceNumber}.${localSequenceNumberIx.toString()}`;
-            
+
+            // Assemble label based on call direction and nesting level
             if (call instanceof vscode.CallHierarchyOutgoingCall) {
                 edgeSequenceNumber = 
                     (parentSequenceNumber === "") 
