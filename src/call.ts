@@ -8,16 +8,20 @@ export interface CallHierarchy {
     item: CallHierarchyItem
     from?: CallHierarchyItem
     to?: CallHierarchyItem
+
+    sequenceNumber?: string
 }
 
 export async function getCallHierarchy(
-    direction: 'Incoming' | 'Outgoing' | 'Both',
-    root: CallHierarchyItem,
-    addEdge: (edge: CallHierarchy) => void
-) {
+        direction: 'Incoming' | 'Outgoing' | 'Both',
+        root: CallHierarchyItem,
+        parentSequenceNumber: string,
+        addEdge: (edge: CallHierarchy) => void
+    ) 
+{
     if (direction === 'Both') {
-        await getCallHierarchy('Incoming', root, addEdge)
-        await getCallHierarchy('Outgoing', root, addEdge)
+        await getCallHierarchy('Incoming', root, parentSequenceNumber, addEdge)
+        await getCallHierarchy('Outgoing', root, parentSequenceNumber, addEdge)
         return
     }
 
@@ -68,8 +72,10 @@ export async function getCallHierarchy(
 
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
+    
+    var edgeSequenceNumber: string;
 
-    const traverse = async (node: CallHierarchyItem) => {
+    const traverse = async (node: CallHierarchyItem, parentSequenceNumber: string) => {
         output.appendLine('resolve: ' + node.name)
         const id  = `"${node.uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
 
@@ -80,9 +86,14 @@ export async function getCallHierarchy(
             | vscode.CallHierarchyOutgoingCall[]
             | vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand(command, node)
 
+        var localSequenceNumberIx: number = 0;
+            
         await Promise.all(calls.map(async (call) => {
             let next: CallHierarchyItem
             let edge: CallHierarchy
+            
+            
+            
             if (call instanceof vscode.CallHierarchyOutgoingCall) {
                 edge = { item: node, to: call.to }
                 next = call.to
@@ -127,12 +138,31 @@ export async function getCallHierarchy(
 
             if (skip) return
 
+            localSequenceNumberIx++;
+            var edgeSequenceNumber = `${parentSequenceNumber}.${localSequenceNumberIx.toString()}`;
+            
+            if (call instanceof vscode.CallHierarchyOutgoingCall) {
+                edgeSequenceNumber = 
+                    (parentSequenceNumber === "") 
+                    ? `${localSequenceNumberIx.toString()}` 
+                    : `${parentSequenceNumber}.${localSequenceNumberIx.toString()}`;
+            } else {
+                edgeSequenceNumber = 
+                    (parentSequenceNumber === "") 
+                    ? `\u21A3 ${localSequenceNumberIx.toString()}` 
+                    : parentSequenceNumber.startsWith('\u21A3') 
+                        ? `${localSequenceNumberIx.toString()} ${parentSequenceNumber}`
+                        : `${localSequenceNumberIx.toString()} \u21A3 ${parentSequenceNumber}`;
+            }
+
+            edge.sequenceNumber = edgeSequenceNumber
+
             addEdge(edge)
-            await traverse(next)
+            await traverse(next, edgeSequenceNumber)
         }))
     }
 
-    await traverse(root)
+    await traverse(root, "")
 }
 
 function isEqual(a: CallHierarchyItem, b: CallHierarchyItem) {

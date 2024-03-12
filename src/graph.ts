@@ -57,6 +57,7 @@ export function getCyElems(workspaceRoot: string, edge: CallHierarchy) {
                 id: `edge:${from.id}:${node.id}`,
                 source: `node:${from.id}`,
                 target: `node:${node.id}`,
+                label: edge.sequenceNumber ? edge.sequenceNumber : '(n/a)',
             }
         })
     } else if (edge.to) {
@@ -68,6 +69,7 @@ export function getCyElems(workspaceRoot: string, edge: CallHierarchy) {
                 id: `edge:${node.id}:${to.id}`,
                 source: `node:${node.id}`,
                 target: `node:${to.id}`,
+                label: edge.sequenceNumber ? edge.sequenceNumber : '(n/a)',
             }
         })
     }
@@ -96,6 +98,7 @@ export type CyEdge = {
         id: string;
         source: string;
         target: string;
+        label: string;
     };
 };
 

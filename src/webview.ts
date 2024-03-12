@@ -162,7 +162,7 @@ export function setupCallGraph(
                         
                         if (params) {
 							Promise.all(params.entryPoints.map(async (entry) => {
-								await getCallHierarchy(params.direction, entry, addEdge)
+								await getCallHierarchy(params.direction, entry, "", addEdge)
 							}))
                         }
                         if (state) {
@@ -208,7 +208,7 @@ export function setupCallGraph(
                     throw new Error(msg)
                 }
 
-                await getCallHierarchy('Both', item[0], addEdge)
+                await getCallHierarchy('Both', item[0], "", addEdge)
 
             case 'savePNG':
                 const data = msg.data; // The PNG data URL

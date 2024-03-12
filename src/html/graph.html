@@ -242,6 +242,11 @@
 							'line-color': getStyle('--vscode-editor-foreground'),
 							'target-arrow-color': getStyle('--vscode-editor-foreground'),
 							'opacity': 0.5,
+                            'label': 'data(label)', // Add this line to display labels
+                            'text-rotation': 'autorotate', // Optional: to rotate the label with the edge
+                            'text-margin-y': -10, // Optional: adjust label position
+                            'color': getStyle('--vscode-editor-foreground'), // Optional: set label color
+                            'font-size': '10px', // Optional: set label font size
 						}
 					},
 					{
@@ -301,6 +306,7 @@
 					state.elems = state.elems.concat(newElems)
 
 					cy.add(newElems)
+                    
 					resetRootHighlights()
 					resetLeafHighlights()
 					resetHighlights()
