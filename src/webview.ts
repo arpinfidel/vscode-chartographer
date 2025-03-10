@@ -2,6 +2,8 @@ import * as vscode from 'vscode'
 import { CyNode, Element, getCyElems } from './graph'
 import { getHtmlContent } from './html'
 import { CallHierarchy, getCallHierarchy } from './call'
+import * as path from 'path'
+import * as fs from 'fs'
 
 type State = {
     elems: Element[],
@@ -25,9 +27,12 @@ export const buildWebview = (
             webviewType,
             `Chartographer Call Graph`,
             vscode.ViewColumn.Beside,
-            {enableScripts: true}
+            {
+                enableScripts: true,
+                localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'src', 'libs'))]
+            }
         )
-        
+
         const { handler, html } = setupCallGraph(context, workspaceRoot, panel, {direction, entryPoints: entries})
 
         panel.webview.onDidReceiveMessage(handler)
@@ -39,7 +44,7 @@ export const registerWebviewPanelSerializer = (
     context: vscode.ExtensionContext,
 	workspaceRoot: string,
 ) => {
-    vscode.window.registerWebviewPanelSerializer(`Chartographer.previewCallGraph`, 
+    vscode.window.registerWebviewPanelSerializer(`Chartographer.previewCallGraph`,
         {
             async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
                 if (!state) {
@@ -85,7 +90,12 @@ export function setupCallGraph(
     params?: Params,
     state?: State,
 ) {
-    const html = getHtmlContent(context)
+    const libsPath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'libs'));
+    const libsURI = panel.webview.asWebviewUri(libsPath);
+    console.log("asdfasdf", libsURI.toString());
+    var html = getHtmlContent(context);
+    html = html.replace(/{{libsURI}}/g, libsURI.toString());
+
     const configs = vscode.workspace.getConfiguration('chartographer')
     const config = {
         highlightRoots: configs.get<boolean>('highlightRoots'),
@@ -132,7 +142,7 @@ export function setupCallGraph(
 							addElems,
 							addEdge,
 						}
-                        
+
                         if (params) {
 							Promise.all(params.entryPoints.map(async (entry) => {
 								await getCallHierarchy(params.direction, entry, addEdge)
@@ -165,7 +175,7 @@ export function setupCallGraph(
                     preview: true,
                     viewColumn: vscode.ViewColumn.One,
                 })
-            
+
             case 'expandBoth':
                 // const uri = vscode.Uri.file(msg.data.uri.fsPath)
                 const position = new vscode.Position(msg.data.line, msg.data.character)

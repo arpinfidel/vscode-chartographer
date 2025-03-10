@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.13] 2023-11-02
+
+- Add reset zoom button
+- Adjust zoom sensitivity
+- Add min and max zoom
+- Bundle libraries used in webview
+
 ## [1.0.12] 2023-11-02
 
 - Add command to add function to last active graph
