@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { buildWebview, getSelectedFunctions, lastFocusedPanel, registerWebviewPanelSerializer } from './webview'
 import { getCyNodes, getNode } from './graph'
+import * as path from "path";
 
 export const output = vscode.window.createOutputChannel('Chartographer')
 
@@ -35,12 +36,24 @@ function findLongestCommonPrefix(strs: string[]): string {
     return prefix;
 }
 
-export function activate(context: vscode.ExtensionContext) {
-    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
-    const workspaceRoot = findLongestCommonPrefix(roots)
+function showChangelog() {
+    const changelogUri = vscode.Uri.file(path.join(__dirname, "..", "CHANGELOG.md"));
 
-    registerWebviewPanelSerializer(context, workspaceRoot)
+    // Open the Markdown file in preview mode
+    vscode.commands.executeCommand("markdown.showPreview", changelogUri);
+}
 
+function checkChangelog(context: vscode.ExtensionContext) {
+    const currentVersion = vscode.extensions.getExtension("yourpublisher.yourextension")?.packageJSON.version;
+    const lastVersion = context.globalState.get<string>("lastVersion");
+
+    if (currentVersion && lastVersion !== currentVersion) {
+        context.globalState.update("lastVersion", currentVersion);
+        showChangelog();
+    }
+}
+
+function registerCommands(context: vscode.ExtensionContext, workspaceRoot: string) {
     const disposable = vscode.commands.registerCommand(
         'Chartographer.showCallGraph',
         async () => {
@@ -86,4 +99,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     )
     context.subscriptions.push(addHierarchy)
+}
+
+export function activate(context: vscode.ExtensionContext) {
+    const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
+    const workspaceRoot = findLongestCommonPrefix(roots)
+
+    registerWebviewPanelSerializer(context, workspaceRoot)
+
+
+    registerCommands(context, workspaceRoot)
+    checkChangelog(context)
 }
