@@ -72,6 +72,49 @@
                 align-items: center;
                 text-align: center;
             }
+            
+            #search-container {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 20;
+                display: flex;
+                align-items: center;
+            }
+            
+            #search-input {
+                padding: 8px;
+                border-radius: 5px;
+                border: none;
+                background-color: rgba(0, 0, 0, 0.3);
+                color: rgba(255, 255, 255, 0.9);
+                width: 200px;
+                font-size: 12px;
+            }
+            
+            #search-results {
+                position: absolute;
+                top: 40px;
+                right: 0;
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 5px;
+                max-height: 200px;
+                overflow-y: auto;
+                width: 200px;
+                display: none;
+            }
+            
+            .search-result-item {
+                padding: 8px;
+                cursor: pointer;
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 12px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .search-result-item:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
         </style>
     </head>
     <body>
@@ -104,6 +147,12 @@
         </div>
 
         <div id="reset-zoom" onclick="cy.fit()">Reset Zoom</div>
+        
+        <!-- Search Bar -->
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search nodes..." />
+            <div id="search-results"></div>
+        </div>
 
         <div id="cy" style="height:100vh"></div>
 
@@ -259,6 +308,15 @@
 							'opacity': 1,
 						}
 					},
+                    {
+                        selector: '.searchHighlight',
+                        style: {
+                            'background-color': getStyle('--vscode-editor-selectionBackground'),
+                            'color': getStyle('--vscode-editor-selectionForeground'),
+                            'border-width': 2,
+                            'border-color': getStyle('--vscode-focusBorder'),
+                        }
+                    },
 				]
 			}
 
@@ -275,10 +333,66 @@
 				}
 			}
 			const resetHighlights = () => {
-				cy.nodes().removeClass(['dimmedNode', 'highlightedNode']);
+				cy.nodes().removeClass(['dimmedNode', 'highlightedNode', 'searchHighlight']);
 				cy.edges().removeClass(['dimmedEdge', 'highlightedEdge']);
 				cy.nodes().data('isHighlighted', false)
 			}
+            
+            // Search functionality
+            function setupSearch() {
+                const searchInput = document.getElementById('search-input');
+                const searchResults = document.getElementById('search-results');
+                
+                searchInput.addEventListener('input', debounce(function() {
+                    const query = searchInput.value.toLowerCase().trim();
+                    if (query.length < 2) {
+                        searchResults.style.display = 'none';
+                        resetHighlights();
+                        return;
+                    }
+                    
+                    // Find matching nodes
+                    const matchingNodes = cy.nodes().filter(node => {
+                        const label = node.data('label') || '';
+                        return label.toLowerCase().includes(query);
+                    });
+                    
+                    // Display results
+                    searchResults.innerHTML = '';
+                    if (matchingNodes.length > 0) {
+                        searchResults.style.display = 'block';
+                        matchingNodes.forEach(node => {
+                            const resultItem = document.createElement('div');
+                            resultItem.className = 'search-result-item';
+                            resultItem.textContent = node.data('label');
+                            resultItem.addEventListener('click', () => {
+                                // Highlight the selected node
+                                resetHighlights();
+                                node.addClass('searchHighlight');
+                                
+                                // Zoom to the node
+                                const pos = node.position();
+                                cy.zoom({
+                                    level: 2,
+                                    position: pos
+                                });
+                                
+                                searchResults.style.display = 'none';
+                            });
+                            searchResults.appendChild(resultItem);
+                        });
+                    } else {
+                        searchResults.style.display = 'none';
+                    }
+                }, 300));
+                
+                // Close search results when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!searchResults.contains(event.target) && event.target !== searchInput) {
+                        searchResults.style.display = 'none';
+                    }
+                });
+            }
 
             document.addEventListener('DOMContentLoaded', function() {
                 vscode.postMessage({
@@ -327,6 +441,18 @@
                     maxZoom: 7.5, // TODO: make configurable
                 });
                 cy.layout(getLayoutOpts()).run();
+                
+                // Setup search functionality
+                setupSearch();
+                
+                // Zoom to node on click
+                cy.bind('click', 'node', function(evt) {
+                    var pos = cy.nodes("[id = " + evt.target.data().id + "]").position();
+                    cy.zoom({
+                        level: 2,
+                        position: pos
+                    });
+                });
 
                 cy.on('tap', function(e) {
                     if (e.target !== cy) {

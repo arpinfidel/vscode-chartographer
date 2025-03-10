@@ -29,7 +29,6 @@ export const buildWebview = (
             vscode.ViewColumn.Beside,
             {
                 enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'src', 'libs'))]
             }
         )
 
