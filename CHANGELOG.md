@@ -1,6 +1,7 @@
+
 # Change Log
 
-## [1.0.13] 2023-11-02
+## [1.0.13] 2025-03-10
 
 - Add reset zoom button
 - Adjust zoom sensitivity
@@ -51,3 +52,4 @@
 ## [1.0.0] 2023-10-22
 
 - Initial release
+

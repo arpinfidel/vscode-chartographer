@@ -92,7 +92,6 @@ export function setupCallGraph(
 ) {
     const libsPath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'libs'));
     const libsURI = panel.webview.asWebviewUri(libsPath);
-    console.log("asdfasdf", libsURI.toString());
     var html = getHtmlContent(context);
     html = html.replace(/{{libsURI}}/g, libsURI.toString());
 

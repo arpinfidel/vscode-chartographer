@@ -44,8 +44,9 @@ function showChangelog() {
 }
 
 function checkChangelog(context: vscode.ExtensionContext) {
-    const currentVersion = vscode.extensions.getExtension("yourpublisher.yourextension")?.packageJSON.version;
+    const currentVersion = vscode.extensions.getExtension("ArpinFidel.Chartographer")?.packageJSON.version;
     const lastVersion = context.globalState.get<string>("lastVersion");
+
 
     if (currentVersion && lastVersion !== currentVersion) {
         context.globalState.update("lastVersion", currentVersion);
@@ -104,10 +105,10 @@ function registerCommands(context: vscode.ExtensionContext, workspaceRoot: strin
 export function activate(context: vscode.ExtensionContext) {
     const roots = vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()) ?? []
     const workspaceRoot = findLongestCommonPrefix(roots)
+    
+    checkChangelog(context)
 
     registerWebviewPanelSerializer(context, workspaceRoot)
 
-
     registerCommands(context, workspaceRoot)
-    checkChangelog(context)
 }
