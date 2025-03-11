@@ -368,11 +368,14 @@
                                 resetHighlights();
                                 node.addClass('searchHighlight');
 
-                                // Zoom to the node
-                                const pos = node.position();
-                                cy.zoom({
-                                    level: 2,
-                                    position: pos
+                                // Center and zoom to the node
+                                cy.animate({
+                                    fit: {
+                                        eles: node,
+                                        padding: 50
+                                    },
+                                    zoom: 1.5,
+                                    duration: 200
                                 });
 
                                 searchResults.style.display = 'none';

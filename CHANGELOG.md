@@ -1,7 +1,11 @@
 
 # Change Log
 
-## [1.0.16] 2025-03-10
+## [1.0.17] 2025-03-11
+
+- Fix search result zooms in on the wrong part of the screen
+
+## [1.0.16] 2025-03-11
 
 - Add search bar
 - Fix "Can't resolve entry function" when expanding graph
