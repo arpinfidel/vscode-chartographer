@@ -5,12 +5,12 @@ export const getNode = (workspaceRoot: string, n: vscode.CallHierarchyItem) => {
     // Create a node with a name based on the URI, item name, and range.
     const uri = n.uri.toString().replace(workspaceRoot, '')
     return {
-        id: `"${uri}#${n.name}@${n.range.start.line}:${n.range.start.character}"`,
+        id: `"${uri}#${n.name}@${n.selectionRange.start.line}:${n.selectionRange.start.character}"`,
         name: n.name,
         file: uri,
         uri: n.uri,
-        line: n.range.start.line, //`${n.range.start.line}:${n.range.start.character}`,
-        character: n.range.start.character,
+        line: n.selectionRange.start.line, //`${n.selectionRange.start.line}:${n.selectionRange.start.character}`,
+        character: n.selectionRange.start.character,
     } as Node;
 }
 

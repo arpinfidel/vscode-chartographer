@@ -13,11 +13,12 @@ export interface CallHierarchy {
 export async function getCallHierarchy(
     direction: 'Incoming' | 'Outgoing' | 'Both',
     root: CallHierarchyItem,
-    addEdge: (edge: CallHierarchy) => void
+    addEdge: (edge: CallHierarchy) => void,
+    maxDepth: number = -1,
 ) {
     if (direction === 'Both') {
-        await getCallHierarchy('Incoming', root, addEdge)
-        await getCallHierarchy('Outgoing', root, addEdge)
+        await getCallHierarchy('Incoming', root, addEdge, maxDepth)
+        await getCallHierarchy('Outgoing', root, addEdge, maxDepth)
         return
     }
 
@@ -28,9 +29,16 @@ export async function getCallHierarchy(
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
 
-    const traverse = async (node: CallHierarchyItem) => {
+    const traverse = async (node: CallHierarchyItem, depth: number = 0) => {
+        // Stop traversal if we've reached the maximum depth
+        if (maxDepth !== -1 && depth >= maxDepth) {
+            return;
+        }
+
         output.appendLine('resolve: ' + node.name)
-        const id  = `"${node.uri}#${node.name}@${node.range.start.line}:${node.range.start.character}"`
+        const id  = `"${node.uri}#${node.name}@${node.selectionRange.start.line}:${node.selectionRange.start.character}"`
+        vscode.window.createOutputChannel("Chartographer").appendLine(`node ${JSON.stringify(node)}`)
+
 
         if (visited[id]) return
         visited[id] = true
@@ -72,7 +80,7 @@ export async function getCallHierarchy(
             if (skip) return
 
             addEdge(edge)
-            await traverse(next)
+            await traverse(next, depth + 1)
         }))
     }
 
@@ -84,7 +92,7 @@ function isEqual(a: CallHierarchyItem, b: CallHierarchyItem) {
         a.name === b.name &&
         a.kind === b.kind &&
         a.uri.toString() === b.uri.toString() &&
-        a.range.start.line === b.range.start.line &&
-        a.range.start.character === b.range.start.character
+        a.selectionRange.start.line === b.range.start.line &&
+        a.selectionRange.start.character === b.selectionRange.start.character
     )
 }

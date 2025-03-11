@@ -2,7 +2,7 @@
     "name": "chartographer",
     "displayName": "Chartographer",
     "description": "Easily visualize function call hierarchy in a neat graph representation",
-    "version": "1.0.15",
+    "version": "1.0.16",
     "publisher": "ArpinFidel",
     "engines": {
         "vscode": "^1.65.0"
@@ -16,21 +16,37 @@
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
+            {    
+                "command": "Chartographer.addHierarchy",
+                "title": "Chartographer: Add Function to Existing Graph"
+            },
+            {
+                "command": "Chartographer.showAllOutgoingCallGraph",
+                "title": "Chartographer: Show All Outgoing Call Graph"
+            },
+            {
+                "command": "Chartographer.showAllIncomingCallGraph",
+                "title": "Chartographer: Show All Incoming Call Graph"
+            },
+            {
+                "command": "Chartographer.showAllCallGraph",
+                "title": "Chartographer: Show All Call Graph"
+            },
             {
                 "command": "Chartographer.showOutgoingCallGraph",
-                "title": "Chartographer: Show outgoing call graph"
+                "title": "Chartographer: Show Outgoing Call Graph"
             },
             {
                 "command": "Chartographer.showIncomingCallGraph",
-                "title": "Chartographer: Show incoming call graph"
+                "title": "Chartographer: Show Incoming Call Graph"
             },
             {
                 "command": "Chartographer.showCallGraph",
-                "title": "Chartographer: Show call graph"
+                "title": "Chartographer: Show Call Graph"
             },
             {
-                "command": "Chartographer.addHierarchy",
-                "title": "Chartographer: Add function to existing graph"
+                "command": "Chartographer.showCallGraphCustomDepth",
+                "title": "Chartographer: Show Call Graph with Custom Depth"
             }
         ],
         "menus": {

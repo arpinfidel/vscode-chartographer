@@ -4,6 +4,10 @@
 ## [1.0.16] 2025-03-10
 
 - Add search bar
+- Fix "Can't resolve entry function" when expanding graph
+- Fix jump to function also expands graph
+- Add options to only open/expand graphs by one level
+- Fix help info overlaps with reset zoom button
 
 ## [1.0.15] 2025-03-10
 
@@ -17,6 +21,7 @@
 - Bundle libraries used in webview
 
 ## [1.0.13] 2023-11-02
+
 - I don't know why this version exists
 
 ## [1.0.12] 2023-11-02
@@ -63,6 +68,3 @@
 ## [1.0.0] 2023-10-22
 
 - Initial release
-
-
-

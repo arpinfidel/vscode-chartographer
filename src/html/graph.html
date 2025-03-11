@@ -12,7 +12,7 @@
 
             #instructions {
                 position: absolute;
-                top: 10px;
+                top: 60px;
                 left: 10px;
                 background-color: rgba(0, 0, 0, 0.3);
                 color: rgba(255, 255, 255, 0.5);
@@ -72,7 +72,7 @@
                 align-items: center;
                 text-align: center;
             }
-            
+
             #search-container {
                 position: absolute;
                 top: 10px;
@@ -81,7 +81,7 @@
                 display: flex;
                 align-items: center;
             }
-            
+
             #search-input {
                 padding: 8px;
                 border-radius: 5px;
@@ -91,7 +91,7 @@
                 width: 200px;
                 font-size: 12px;
             }
-            
+
             #search-results {
                 position: absolute;
                 top: 40px;
@@ -103,7 +103,7 @@
                 width: 200px;
                 display: none;
             }
-            
+
             .search-result-item {
                 padding: 8px;
                 cursor: pointer;
@@ -111,7 +111,7 @@
                 font-size: 12px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
-            
+
             .search-result-item:hover {
                 background-color: rgba(255, 255, 255, 0.1);
             }
@@ -122,13 +122,10 @@
             // Function to toggle the visibility of instructions
             function toggleInstructions() {
                 var instructions = document.getElementById("instructions");
-                var question = document.getElementById("question-mark");
                 if (instructions.style.display === "none" || instructions.style.display === "") {
                     instructions.style.display = "block";
-                    question.style.display = "none";
                 } else {
                     instructions.style.display = "none";
-                    question.style.display = "flex";
                 }
             }
         </script>
@@ -142,12 +139,13 @@
             <p>Left Click to highlight connections</p>
             <p>Left Click and drag to pan</p>
             <p>Scroll to zoom</p>
-            <p>Alt/Opt + Left Click to expand graph</p>
+            <p>Alt/Opt + Left Click to expand graph by one level</p>
+            <p>Alt/Opt + Shift + Left Click to expand graph recursively</p>
             <div id="hide-text">Click to hide</div>
         </div>
 
         <div id="reset-zoom" onclick="cy.fit()">Reset Zoom</div>
-        
+
         <!-- Search Bar -->
         <div id="search-container">
             <input type="text" id="search-input" placeholder="Search nodes..." />
@@ -337,12 +335,12 @@
 				cy.edges().removeClass(['dimmedEdge', 'highlightedEdge']);
 				cy.nodes().data('isHighlighted', false)
 			}
-            
+
             // Search functionality
             function setupSearch() {
                 const searchInput = document.getElementById('search-input');
                 const searchResults = document.getElementById('search-results');
-                
+
                 searchInput.addEventListener('input', debounce(function() {
                     const query = searchInput.value.toLowerCase().trim();
                     if (query.length < 2) {
@@ -350,13 +348,13 @@
                         resetHighlights();
                         return;
                     }
-                    
+
                     // Find matching nodes
                     const matchingNodes = cy.nodes().filter(node => {
                         const label = node.data('label') || '';
                         return label.toLowerCase().includes(query);
                     });
-                    
+
                     // Display results
                     searchResults.innerHTML = '';
                     if (matchingNodes.length > 0) {
@@ -369,14 +367,14 @@
                                 // Highlight the selected node
                                 resetHighlights();
                                 node.addClass('searchHighlight');
-                                
+
                                 // Zoom to the node
                                 const pos = node.position();
                                 cy.zoom({
                                     level: 2,
                                     position: pos
                                 });
-                                
+
                                 searchResults.style.display = 'none';
                             });
                             searchResults.appendChild(resultItem);
@@ -385,7 +383,7 @@
                         searchResults.style.display = 'none';
                     }
                 }, 300));
-                
+
                 // Close search results when clicking outside
                 document.addEventListener('click', function(event) {
                     if (!searchResults.contains(event.target) && event.target !== searchInput) {
@@ -441,10 +439,10 @@
                     maxZoom: 7.5, // TODO: make configurable
                 });
                 cy.layout(getLayoutOpts()).run();
-                
+
                 // Setup search functionality
                 setupSearch();
-                
+
                 // Zoom to node on click
                 cy.bind('click', 'node', function(evt) {
                     var pos = cy.nodes("[id = " + evt.target.data().id + "]").position();
@@ -480,8 +478,20 @@
                         return false
                     }
 
+                    const isShiftDown = (e) => {
+                        if (e.originalEvent.shiftKey) {
+                            return true
+                        }
+                        return false
+                    }
+
+                    // console.log(isMac)
+                    // console.log(isCtrlDown(e))
+                    // console.log(isAltDown(e))
                     // console.log(e.originalEvent.metaKey);
                     // console.log(e.originalEvent.shiftKey);
+                    // console.log(e.originalEvent.altKey);
+                    // console.log(e.originalEvent.ctrlKey);
 
                     if (isCtrlDown(e)) {
                         vscode.postMessage({
@@ -492,10 +502,23 @@
                     }
 
 					if (isAltDown(e)) {
-						vscode.postMessage({
-							type: 'expandBoth',
-							data: node.data(),
-						})
+                        if (isShiftDown(e)) {
+                            vscode.postMessage({
+                                type: 'expandBoth',
+                                data: {
+                                    id: node.id(),
+                                    depth: -1,
+                                },
+                            })
+                        } else {
+                            vscode.postMessage({
+                                type: 'expandBoth',
+                                data: {
+                                    id: node.id(),
+                                    depth: 1,
+                                },
+                            })
+                        }
 						return
 					}
 

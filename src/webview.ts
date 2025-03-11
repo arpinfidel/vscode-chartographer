@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { CyNode, Element, getCyElems } from './graph'
 import { getHtmlContent } from './html'
-import { CallHierarchy, getCallHierarchy } from './call'
+import { CallHierarchy, getCallHierarchy as buildGraph } from './call'
 import * as path from 'path'
 import * as fs from 'fs'
 
@@ -12,12 +12,14 @@ type State = {
 type Params = {
     direction: 'Incoming' | 'Outgoing' | 'Both',
     entryPoints: vscode.CallHierarchyItem[],
+    maxDepth?: number,
 }
 
 export const buildWebview = (
     context: vscode.ExtensionContext,
 	workspaceRoot: string,
     direction: 'Incoming' | 'Outgoing' | 'Both',
+    maxDepth: number=-1,
 ) => {
     return async () => {
         const entries: vscode.CallHierarchyItem[] = await getSelectedFunctions()
@@ -32,7 +34,7 @@ export const buildWebview = (
             }
         )
 
-        const { handler, html } = setupCallGraph(context, workspaceRoot, panel, {direction, entryPoints: entries})
+        const { handler, html } = setupCallGraph(context, workspaceRoot, panel, {direction, entryPoints: entries, maxDepth})
 
         panel.webview.onDidReceiveMessage(handler)
         panel.webview.html = html
@@ -74,6 +76,7 @@ export async function getSelectedFunctions() {
 		vscode.window.showErrorMessage(msg)
 		throw new Error(msg)
 	}
+
 	return entry
 }
 
@@ -134,6 +137,8 @@ export function setupCallGraph(
                                 config,
                             },
                         })
+                        break
+
                     case 'ready':
                         lastFocusedPanel = {
 							panel,
@@ -143,7 +148,7 @@ export function setupCallGraph(
 
                         if (params) {
 							Promise.all(params.entryPoints.map(async (entry) => {
-								await getCallHierarchy(params.direction, entry, addEdge)
+								await buildGraph(params.direction, entry, addEdge, params.maxDepth)
 							}))
                         }
                         if (state) {
@@ -156,10 +161,11 @@ export function setupCallGraph(
                                 data: state.elems,
                             })
                         }
+                        break
                 }
 
             case 'goToFunction':
-                const node = nodes[msg.data] as CyNode
+                var node = nodes[msg.data] as CyNode
                 if (!node) return
 
                 const range = new vscode.Range(
@@ -173,14 +179,17 @@ export function setupCallGraph(
                     preview: true,
                     viewColumn: vscode.ViewColumn.One,
                 })
+                break
 
             case 'expandBoth':
                 // const uri = vscode.Uri.file(msg.data.uri.fsPath)
-                const position = new vscode.Position(msg.data.line, msg.data.character)
+                var node = nodes[msg.data.id] as CyNode
+                if (!node) return
+                const position = new vscode.Position(node.data.line, node.data.character)
                 const item: vscode.CallHierarchyItem[] =
                     await vscode.commands.executeCommand(
                         'vscode.prepareCallHierarchy',
-                        vscode.Uri.parse(msg.data.uri.external),
+                        node.data.uri,
                         position,
                     )
                 if (!item || !item[0]) {
@@ -189,7 +198,8 @@ export function setupCallGraph(
                     throw new Error(msg)
                 }
 
-                await getCallHierarchy('Both', item[0], addEdge)
+                await buildGraph('Both', item[0], addEdge, msg.data.depth)
+                break
         }
     }
     return { handler, html }
