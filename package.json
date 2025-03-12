@@ -52,6 +52,18 @@
         "menus": {
             "editor/context": [
                 {
+                    "command": "Chartographer.addHierarchy"
+                },
+                {
+                    "command": "Chartographer.showAllOutgoingCallGraph"
+                },
+                {
+                    "command": "Chartographer.showAllIncomingCallGraph"
+                },
+                {
+                    "command": "Chartographer.showAllCallGraph"
+                },
+                {
                     "command": "Chartographer.showOutgoingCallGraph"
                 },
                 {
@@ -59,9 +71,6 @@
                 },
                 {
                     "command": "Chartographer.showCallGraph"
-                },
-                {
-                    "command": "Chartographer.addHierarchy"
                 }
             ]
         },

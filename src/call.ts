@@ -1,6 +1,6 @@
 import { CallHierarchyItem } from 'vscode'
 import * as vscode from 'vscode'
-import { output } from './extension'
+import { printChannelOutput } from './extension'
 import { minimatch } from 'minimatch'
 import EventEmitter = require('events')
 
@@ -35,10 +35,7 @@ export async function getCallHierarchy(
             return;
         }
 
-        output.appendLine('resolve: ' + node.name)
         const id  = `"${node.uri}#${node.name}@${node.selectionRange.start.line}:${node.selectionRange.start.character}"`
-        vscode.window.createOutputChannel("Chartographer").appendLine(`node ${JSON.stringify(node)}`)
-
 
         if (visited[id]) return
         visited[id] = true

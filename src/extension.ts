@@ -3,8 +3,6 @@ import { buildWebview, getSelectedFunctions, lastFocusedPanel, registerWebviewPa
 import { getCyNodes, getNode } from './graph'
 import * as path from "path";
 
-export const output = vscode.window.createOutputChannel('Chartographer')
-
 const getDefaultProgressOptions = (title: string): vscode.ProgressOptions => {
     return {
         location: vscode.ProgressLocation.Notification,

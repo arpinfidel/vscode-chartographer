@@ -446,15 +446,6 @@
                 // Setup search functionality
                 setupSearch();
 
-                // Zoom to node on click
-                cy.bind('click', 'node', function(evt) {
-                    var pos = cy.nodes("[id = " + evt.target.data().id + "]").position();
-                    cy.zoom({
-                        level: 2,
-                        position: pos
-                    });
-                });
-
                 cy.on('tap', function(e) {
                     if (e.target !== cy) {
                         return;
