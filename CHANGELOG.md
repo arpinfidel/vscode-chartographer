@@ -1,6 +1,12 @@
 
 # Change Log
 
+## [1.0.18] 2025-03-17
+
+- Added high contrast color scheme option
+- Added options to override colors
+- Added option to ignore files based on .gitignore
+
 ## [1.0.17] 2025-03-11
 
 - Fix search result zooms in on the wrong part of the screen
@@ -72,3 +78,4 @@
 ## [1.0.0] 2023-10-22
 
 - Initial release
+
