@@ -47,6 +47,10 @@
             {
                 "command": "Chartographer.showCallGraphCustomDepth",
                 "title": "Chartographer: Show Call Graph with Custom Depth"
+            },
+            {
+                "command": "Chartographer.showOutputChannel",
+                "title": "Chartographer: Show Output Channel"
             }
         ],
         "menus": {
@@ -71,6 +75,9 @@
                 },
                 {
                     "command": "Chartographer.showCallGraph"
+                },
+                {
+                    "command": "Chartographer.showOutputChannel"
                 }
             ]
         },
@@ -114,6 +121,24 @@
                         "Dagre"
                     ],
                     "default": "dagre"
+                },
+                "chartographer.respectGitignore": {
+                    "description": "Respect .gitignore patterns when generating call graphs",
+                    "type": "boolean",
+                    "default": false
+                },
+                "chartographer.colorScheme": {
+                    "description": "Color scheme for the call graph",
+                    "type": "string",
+                    "enum": [
+                        "default",
+                        "highContrast"
+                    ],
+                    "enumDescriptions": [
+                        "Follow VSCode color scheme (default)",
+                        "High contrast color scheme"
+                    ],
+                    "default": "default"
                 }
             }
         }

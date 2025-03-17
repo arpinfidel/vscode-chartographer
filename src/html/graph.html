@@ -223,19 +223,87 @@
                 }
             }
 
+            // Define color schemes
+            const colorSchemes = {
+                "default": {
+                    node: {
+                        backgroundColor: '--vscode-menu-background',
+                        color: '--vscode-menu-foreground',
+                        borderColor: '--vscode-editor-foreground'
+                    },
+                    highlightedLeafNode: {
+                        backgroundColor: '--vscode-editorWarning-background',
+                        color: '--vscode-editorWarning-foreground'
+                    },
+                    highlightedRootNode: {
+                        backgroundColor: '--vscode-editorError-background',
+                        color: '--vscode-editorError-foreground'
+                    },
+                    compound: {
+                        backgroundColor: '--vscode-editor-background'
+                    },
+                    edge: {
+                        lineColor: '--vscode-editor-foreground',
+                        arrowColor: '--vscode-editor-foreground'
+                    },
+                    searchHighlight: {
+                        backgroundColor: '--vscode-editor-selectionBackground',
+                        color: '--vscode-editor-selectionForeground',
+                        borderColor: '--vscode-focusBorder'
+                    }
+                },
+                "highContrast": {
+                    node: {
+                        backgroundColor: '#000000',
+                        color: '#FFFFFF',
+                        borderColor: '#FFFFFF'
+                    },
+                    highlightedLeafNode: {
+                        backgroundColor: '#0000FF',
+                        color: '#FFFFFF'
+                    },
+                    highlightedRootNode: {
+                        backgroundColor: '#FF0000',
+                        color: '#FFFFFF'
+                    },
+                    compound: {
+                        backgroundColor: '#000000'
+                    },
+                    edge: {
+                        lineColor: '#FFFFFF',
+                        arrowColor: '#FFFFFF'
+                    },
+                    searchHighlight: {
+                        backgroundColor: '#FFFF00',
+                        color: '#000000',
+                        borderColor: '#FFFFFF'
+                    }
+                }
+            };
+
 			const getCyStyle = () => {
                 const style = getComputedStyle(document.body);
                 const getStyle = (name) => style.getPropertyValue(name);
+                
+                // Get the selected color scheme
+                const selectedScheme = state.config.colorScheme || 'default';
+                const colors = colorSchemes[selectedScheme];
+                
+                // Helper function to get color value (either from CSS variable or direct color)
+                const getColor = (colorValue) => {
+                    return colorValue.startsWith('--') ? getStyle(colorValue) : colorValue;
+                };
+                
 				return [
 					{
 						selector: 'node',
 						style: {
 							'font-size': '12px',
-							'background-color': getStyle('--vscode-menu-background'),
-							'color': getStyle('--vscode-menu-foreground'),
+							'background-color': getColor(colors.node.backgroundColor),
+							'color': getColor(colors.node.color),
 							'width': 'label',
 							'padding': '5px',
-							'border-color': getStyle('--vscode-editor-foreground'),
+							'border-color': getColor(colors.node.borderColor),
 							'border-width': 1,
 							'shape': 'roundrectangle',
 							'label': 'data(label)',
@@ -253,21 +321,20 @@
 						selector: '.highlightedNode',
 						style: {
 							'opacity': 1,
-							// 'color': 'red',
 						}
 					},
 					{
 						selector: '.highlightedLeafNode',
 						style: {
-							'background-color': getStyle('--vscode-editorWarning-background'),
-							'color': getStyle('--vscode-editorWarning-foreground'),
+							'background-color': getColor(colors.highlightedLeafNode.backgroundColor),
+							'color': getColor(colors.highlightedLeafNode.color),
 						}
 					},
 					{
 						selector: '.highlightedRootNode',
 						style: {
-							'background-color': getStyle('--vscode-editorError-background'),
-							'color': getStyle('--vscode-editorError-foreground'),
+							'background-color': getColor(colors.highlightedRootNode.backgroundColor),
+							'color': getColor(colors.highlightedRootNode.color),
 						}
 					},
 					{
@@ -275,10 +342,9 @@
 						style: {
 							'font-size': '10px',
 							'padding-top': 25,
-							'background-color': getStyle('--vscode-editor-background'),
+							'background-color': getColor(colors.compound.backgroundColor),
 							'shape': 'roundrectangle',
 							'label': 'data(label)',
-
 							'text-valign': 'top',
 							'text-halign': 'center',
 							'text-margin-y': 15,
@@ -289,8 +355,8 @@
 						style: {
 							'curve-style': 'unbundled-bezier',
 							'target-arrow-shape': 'triangle',
-							'line-color': getStyle('--vscode-editor-foreground'),
-							'target-arrow-color': getStyle('--vscode-editor-foreground'),
+							'line-color': getColor(colors.edge.lineColor),
+							'target-arrow-color': getColor(colors.edge.arrowColor),
 							'opacity': 0.5,
 						}
 					},
@@ -309,10 +375,10 @@
                     {
                         selector: '.searchHighlight',
                         style: {
-                            'background-color': getStyle('--vscode-editor-selectionBackground'),
-                            'color': getStyle('--vscode-editor-selectionForeground'),
+                            'background-color': getColor(colors.searchHighlight.backgroundColor),
+                            'color': getColor(colors.searchHighlight.color),
                             'border-width': 2,
-                            'border-color': getStyle('--vscode-focusBorder'),
+                            'border-color': getColor(colors.searchHighlight.borderColor),
                         }
                     },
 				]

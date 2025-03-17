@@ -162,6 +162,15 @@ function registerCommands(context: vscode.ExtensionContext, workspaceRoot: strin
         }
     )
     context.subscriptions.push(customDepthDisposable)
+
+    // Add command to show output channel
+    const showOutputChannelDisposable = vscode.commands.registerCommand(
+        'Chartographer.showOutputChannel',
+        () => {
+            outputChannel.show(true)
+        }
+    )
+    context.subscriptions.push(showOutputChannelDisposable)
 }
 
 let outputChannel: vscode.OutputChannel;

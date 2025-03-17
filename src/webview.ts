@@ -102,6 +102,7 @@ export function setupCallGraph(
         highlightRoots: configs.get<boolean>('highlightRoots'),
         highlightLeaves: configs.get<boolean>('highlightLeaves'),
         defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
+        colorScheme: configs.get<string>('colorScheme'),
     }
 
 	// panel.onDidChangeViewState((e) => {

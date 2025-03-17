@@ -3,6 +3,37 @@ import * as vscode from 'vscode'
 import { printChannelOutput } from './extension'
 import { minimatch } from 'minimatch'
 import EventEmitter = require('events')
+import * as fs from 'fs'
+import * as path from 'path'
+
+function getGitignorePatterns(workspaceRoot: string): string[] {
+    const gitignorePath = path.join(workspaceRoot, '.gitignore')
+    if (!fs.existsSync(gitignorePath)) {
+        return []
+    }
+
+    const content = fs.readFileSync(gitignorePath, 'utf8')
+    return content
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'))
+        // .map(pattern => {
+        //     // Convert .gitignore patterns to minimatch patterns
+        //     if (pattern.startsWith('/')) {
+        //         // Remove leading slash for relative paths
+        //         pattern = pattern.slice(1)
+        //     }
+        //     if (pattern.endsWith('/')) {
+        //         // Add ** to match all files in directory
+        //         pattern = pattern + '**'
+        //     }
+        //     if (!pattern.startsWith('*') && !pattern.includes('/')) {
+        //         // Add **/ prefix to match files in any directory
+        //         pattern = '**/' + pattern
+        //     }
+        //     return pattern
+        // })
+}
 
 export interface CallHierarchy {
     item: CallHierarchyItem
@@ -25,6 +56,18 @@ export async function getCallHierarchy(
     const configs = vscode.workspace.getConfiguration()
     const ignoreGlobs = configs.get<string[]>('chartographer.ignoreOnGenerate') ?? []
     const ignoreNonWorkspaceFiles = configs.get<boolean>('chartographer.ignoreNonWorkspaceFiles') ?? false
+    const respectGitignore = configs.get<boolean>('chartographer.respectGitignore') ?? false
+
+    // Get workspace root from the root item's URI
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(root.uri)
+    const workspaceRoot = workspaceFolder?.uri.fsPath ?? ''
+
+    // Combine ignore patterns
+    let allIgnoreGlobs = [...ignoreGlobs]
+    if (respectGitignore && workspaceRoot) {
+        const gitignorePatterns = getGitignorePatterns(workspaceRoot)
+        allIgnoreGlobs.push(...gitignorePatterns)
+    }
 
     const command = direction === 'Outgoing' ? 'vscode.provideOutgoingCalls' : 'vscode.provideIncomingCalls'
     const visited: { [key: string]: boolean } = {};
@@ -56,8 +99,11 @@ export async function getCallHierarchy(
             }
 
             let skip = false
-            for (const glob of ignoreGlobs) {
-                if (minimatch(next.uri.fsPath, glob)) {
+            for (const glob of allIgnoreGlobs) {
+                // Make the path relative to workspace root for gitignore pattern matching
+                const relativePath = workspaceRoot ? path.relative(workspaceRoot, next.uri.fsPath) : next.uri.fsPath
+                printChannelOutput(`Checking if ${relativePath} matches ${glob}: ${minimatch(relativePath, glob)}`)
+                if (minimatch(relativePath, glob)) {
                     skip = true
                     break
                 }
