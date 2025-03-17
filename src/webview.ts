@@ -4,6 +4,7 @@ import { getHtmlContent } from './html'
 import { CallHierarchy, getCallHierarchy as buildGraph } from './call'
 import * as path from 'path'
 import * as fs from 'fs'
+import { printChannelOutput } from './extension'
 
 type State = {
     elems: Element[],
@@ -103,7 +104,23 @@ export function setupCallGraph(
         highlightLeaves: configs.get<boolean>('highlightLeaves'),
         defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
         colorScheme: configs.get<string>('colorScheme'),
+        colors: {
+            nodeBackgroundColor: configs.get<string>('colors.nodeBackgroundColor'),
+            nodeColor: configs.get<string>('colors.nodeColor'),
+            nodeBorderColor: configs.get<string>('colors.nodeBorderColor'),
+            highlightedLeafNodeBackgroundColor: configs.get<string>('colors.highlightedLeafNodeBackgroundColor'),
+            highlightedLeafNodeColor: configs.get<string>('colors.highlightedLeafNodeColor'),
+            highlightedRootNodeBackgroundColor: configs.get<string>('colors.highlightedRootNodeBackgroundColor'),
+            highlightedRootNodeColor: configs.get<string>('colors.highlightedRootNodeColor'),
+            compoundBackgroundColor: configs.get<string>('colors.compoundBackgroundColor'),
+            edgeLineColor: configs.get<string>('colors.edgeLineColor'),
+            edgeArrowColor: configs.get<string>('colors.edgeArrowColor'),
+            searchHighlightBackgroundColor: configs.get<string>('colors.searchHighlightBackgroundColor'),
+            searchHighlightColor: configs.get<string>('colors.searchHighlightColor'),
+            searchHighlightBorderColor: configs.get<string>('colors.searchHighlightBorderColor')
+        }
     }
+    printChannelOutput(JSON.stringify(config, null, 4))
 
 	// panel.onDidChangeViewState((e) => {
 	// 	if (panel.visible) {

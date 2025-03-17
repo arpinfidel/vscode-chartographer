@@ -81,67 +81,126 @@
                 }
             ]
         },
-        "configuration": {
-            "title": "Chartographer",
-            "properties": {
-                "chartographer.ignoreOnGenerate": {
-                    "description": "Glob patterns of files to ignore when fetching call hierarchy for the call graph",
-                    "type": "array",
-                    "items": {
+        "configuration": [
+            {
+                "title": "General",
+                "properties": {
+                    "chartographer.ignoreOnGenerate": {
+                        "description": "Glob patterns of files to ignore when fetching call hierarchy for the call graph",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": []
+                    },
+                    "chartographer.highlightRoots": {
+                        "description": "Color root nodes in the call graph",
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "chartographer.highlightLeaves": {
+                        "description": "Color leaf nodes in the call graph",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "chartographer.ignoreNonWorkspaceFiles": {
+                        "description": "Ignore files that are not part of the current workspace",
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "chartographer.defaultGraphLayoutAlgorithm": {
+                        "description": "Default graph layout algorithm to use",
+                        "type": "string",
+                        "enum": [
+                            "klay",
+                            "elk",
+                            "dagre"
+                        ],
+                        "enumDescriptions": [
+                            "Klay",
+                            "ELK",
+                            "Dagre"
+                        ],
+                        "default": "dagre"
+                    },
+                    "chartographer.respectGitignore": {
+                        "description": "Respect .gitignore patterns when generating call graphs",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "chartographer.colorScheme": {
+                        "description": "Color scheme for the call graph",
+                        "type": "string",
+                        "enum": [
+                            "default",
+                            "highContrast"
+                        ],
+                        "enumDescriptions": [
+                            "Follow VSCode color scheme (default)",
+                            "High contrast color scheme"
+                        ],
+                        "default": "default"
+                    }
+                }
+            },
+            {
+                "title": "Colors",
+                "properties": {
+                    "chartographer.colors.nodeBackgroundColor": {
+                        "description": "Override background color for nodes",
                         "type": "string"
                     },
-                    "default": []
-                },
-                "chartographer.highlightRoots": {
-                    "description": "Color root nodes in the call graph",
-                    "type": "boolean",
-                    "default": true
-                },
-                "chartographer.highlightLeaves": {
-                    "description": "Color leaf nodes in the call graph",
-                    "type": "boolean",
-                    "default": false
-                },
-                "chartographer.ignoreNonWorkspaceFiles": {
-                    "description": "Ignore files that are not part of the current workspace",
-                    "type": "boolean",
-                    "default": true
-                },
-                "chartographer.defaultGraphLayoutAlgorithm": {
-                    "description": "Default graph layout algorithm to use",
-                    "type": "string",
-                    "enum": [
-                        "klay",
-                        "elk",
-                        "dagre"
-                    ],
-                    "enumDescriptions": [
-                        "Klay",
-                        "ELK",
-                        "Dagre"
-                    ],
-                    "default": "dagre"
-                },
-                "chartographer.respectGitignore": {
-                    "description": "Respect .gitignore patterns when generating call graphs",
-                    "type": "boolean",
-                    "default": false
-                },
-                "chartographer.colorScheme": {
-                    "description": "Color scheme for the call graph",
-                    "type": "string",
-                    "enum": [
-                        "default",
-                        "highContrast"
-                    ],
-                    "enumDescriptions": [
-                        "Follow VSCode color scheme (default)",
-                        "High contrast color scheme"
-                    ],
-                    "default": "default"
+                    "chartographer.colors.nodeColor": {
+                        "description": "Override text color for nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.nodeBorderColor": {
+                        "description": "Override border color for nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.highlightedLeafNodeBackgroundColor": {
+                        "description": "Override background color for highlighted leaf nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.highlightedLeafNodeColor": {
+                        "description": "Override text color for highlighted leaf nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.highlightedRootNodeBackgroundColor": {
+                        "description": "Override background color for highlighted root nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.highlightedRootNodeColor": {
+                        "description": "Override text color for highlighted root nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.compoundBackgroundColor": {
+                        "description": "Override background color for compound nodes",
+                        "type": "string"
+                    },
+                    "chartographer.colors.edgeLineColor": {
+                        "description": "Override line color for edges",
+                        "type": "string"
+                    },
+                    "chartographer.colors.edgeArrowColor": {
+                        "description": "Override arrow color for edges",
+                        "type": "string"
+                    },
+                    "chartographer.colors.searchHighlightBackgroundColor": {
+                        "description": "Override background color for search highlight",
+                        "type": "string"
+                    },
+                    "chartographer.colors.searchHighlightColor": {
+                        "description": "Override text color for search highlight",
+                        "type": "string"
+                    },
+                    "chartographer.colors.searchHighlightBorderColor": {
+                        "description": "Override border color for search highlight",
+                        "type": "string"
+                    }
                 }
             }
-        }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "yarn run compile",

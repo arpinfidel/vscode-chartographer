@@ -288,9 +288,15 @@
                 // Get the selected color scheme
                 const selectedScheme = state.config.colorScheme || 'default';
                 const colors = colorSchemes[selectedScheme];
+
+                // Override colors with configuration options
+                const overrides = state.config.colors || {};
                 
                 // Helper function to get color value (either from CSS variable or direct color)
-                const getColor = (colorValue) => {
+                const getColor = (colorValue, overrideValue) => {
+                    if (overrideValue) {
+                        return overrideValue;
+                    }
                     return colorValue.startsWith('--') ? getStyle(colorValue) : colorValue;
                 };
                 
@@ -299,11 +305,11 @@
 						selector: 'node',
 						style: {
 							'font-size': '12px',
-							'background-color': getColor(colors.node.backgroundColor),
-							'color': getColor(colors.node.color),
+							'background-color': getColor(colors.node.backgroundColor, overrides.nodeBackgroundColor),
+							'color': getColor(colors.node.color, overrides.nodeColor),
 							'width': 'label',
 							'padding': '5px',
-							'border-color': getColor(colors.node.borderColor),
+							'border-color': getColor(colors.node.borderColor, overrides.nodeBorderColor),
 							'border-width': 1,
 							'shape': 'roundrectangle',
 							'label': 'data(label)',
@@ -326,15 +332,15 @@
 					{
 						selector: '.highlightedLeafNode',
 						style: {
-							'background-color': getColor(colors.highlightedLeafNode.backgroundColor),
-							'color': getColor(colors.highlightedLeafNode.color),
+							'background-color': getColor(colors.highlightedLeafNode.backgroundColor, overrides.highlightedLeafNodeBackgroundColor),
+							'color': getColor(colors.highlightedLeafNode.color, overrides.highlightedLeafNodeColor),
 						}
 					},
 					{
 						selector: '.highlightedRootNode',
 						style: {
-							'background-color': getColor(colors.highlightedRootNode.backgroundColor),
-							'color': getColor(colors.highlightedRootNode.color),
+							'background-color': getColor(colors.highlightedRootNode.backgroundColor, overrides.highlightedRootNodeBackgroundColor),
+							'color': getColor(colors.highlightedRootNode.color, overrides.highlightedRootNodeColor),
 						}
 					},
 					{
@@ -342,7 +348,7 @@
 						style: {
 							'font-size': '10px',
 							'padding-top': 25,
-							'background-color': getColor(colors.compound.backgroundColor),
+							'background-color': getColor(colors.compound.backgroundColor, overrides.compoundBackgroundColor),
 							'shape': 'roundrectangle',
 							'label': 'data(label)',
 							'text-valign': 'top',
@@ -355,8 +361,8 @@
 						style: {
 							'curve-style': 'unbundled-bezier',
 							'target-arrow-shape': 'triangle',
-							'line-color': getColor(colors.edge.lineColor),
-							'target-arrow-color': getColor(colors.edge.arrowColor),
+							'line-color': getColor(colors.edge.lineColor, overrides.edgeLineColor),
+							'target-arrow-color': getColor(colors.edge.arrowColor, overrides.edgeArrowColor),
 							'opacity': 0.5,
 						}
 					},
@@ -375,10 +381,10 @@
                     {
                         selector: '.searchHighlight',
                         style: {
-                            'background-color': getColor(colors.searchHighlight.backgroundColor),
-                            'color': getColor(colors.searchHighlight.color),
+                            'background-color': getColor(colors.searchHighlight.backgroundColor, overrides.searchHighlightBackgroundColor),
+                            'color': getColor(colors.searchHighlight.color, overrides.searchHighlightColor),
                             'border-width': 2,
-                            'border-color': getColor(colors.searchHighlight.borderColor),
+                            'border-color': getColor(colors.searchHighlight.borderColor, overrides.searchHighlightBorderColor),
                         }
                     },
 				]
