@@ -98,11 +98,12 @@ export async function getCallHierarchy(
                 next = call.from
             }
 
+            printChannelOutput(JSON.stringify(next, null, 2))
+
             let skip = false
             for (const glob of allIgnoreGlobs) {
                 // Make the path relative to workspace root for gitignore pattern matching
                 const relativePath = workspaceRoot ? path.relative(workspaceRoot, next.uri.fsPath) : next.uri.fsPath
-                printChannelOutput(`Checking if ${relativePath} matches ${glob}: ${minimatch(relativePath, glob)}`)
                 if (minimatch(relativePath, glob)) {
                     skip = true
                     break

@@ -2,7 +2,7 @@
     "name": "chartographer",
     "displayName": "Chartographer",
     "description": "Easily visualize function call hierarchy in a neat graph representation",
-    "version": "1.0.18",
+    "version": "1.1.0",
     "publisher": "ArpinFidel",
     "engines": {
         "vscode": "^1.65.0"
@@ -16,7 +16,7 @@
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
-            {    
+            {
                 "command": "Chartographer.addHierarchy",
                 "title": "Chartographer: Add Function to Existing Graph"
             },
@@ -140,6 +140,15 @@
                             "High contrast color scheme"
                         ],
                         "default": "default"
+                    },
+                    "chartographer.nodeDisplayFormat": {
+                        "description": "Format for displaying file nodes in the call graph. \n Supported tokens:\n - $path: The relative path (same as default)\n - $path{N}: The last N segments of the path\n - $fullPath: The full path\n - $fileName: Just the file name\n - $fileExt: Just the file extension",
+                        "type": "string"
+                    },
+                    "chartographer.trimFunctionNames": {
+                        "description": "Trim function names at the first non-alphabetic character (experimental)",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -174,8 +183,8 @@
                         "description": "Override text color for highlighted root nodes",
                         "type": "string"
                     },
-                    "chartographer.colors.compoundBackgroundColor": {
-                        "description": "Override background color for compound nodes",
+                    "chartographer.colors.nodeGroupBackgroundColor": {
+                        "description": "Override background color for node groups",
                         "type": "string"
                     },
                     "chartographer.colors.edgeLineColor": {

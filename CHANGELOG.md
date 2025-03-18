@@ -1,6 +1,11 @@
 
 # Change Log
 
+## [1.1.0] 2025-03-18
+
+- Added parameterized node group name forming
+- Added option to trim method name on first non alphabet character
+
 ## [1.0.18] 2025-03-17
 
 - Added high contrast color scheme option

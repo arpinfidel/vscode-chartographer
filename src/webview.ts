@@ -104,6 +104,8 @@ export function setupCallGraph(
         highlightLeaves: configs.get<boolean>('highlightLeaves'),
         defaultGraphLayoutAlgorithm: configs.get<string>('defaultGraphLayoutAlgorithm'),
         colorScheme: configs.get<string>('colorScheme'),
+        nodeDisplayFormat: configs.get<string>('nodeDisplayFormat'),
+        trimFunctionNames: configs.get<boolean>('trimFunctionNames'),
         colors: {
             nodeBackgroundColor: configs.get<string>('colors.nodeBackgroundColor'),
             nodeColor: configs.get<string>('colors.nodeColor'),
@@ -112,7 +114,7 @@ export function setupCallGraph(
             highlightedLeafNodeColor: configs.get<string>('colors.highlightedLeafNodeColor'),
             highlightedRootNodeBackgroundColor: configs.get<string>('colors.highlightedRootNodeBackgroundColor'),
             highlightedRootNodeColor: configs.get<string>('colors.highlightedRootNodeColor'),
-            compoundBackgroundColor: configs.get<string>('colors.compoundBackgroundColor'),
+            nodeGroupBackgroundColor: configs.get<string>('colors.nodeGroupBackgroundColor'),
             edgeLineColor: configs.get<string>('colors.edgeLineColor'),
             edgeArrowColor: configs.get<string>('colors.edgeArrowColor'),
             searchHighlightBackgroundColor: configs.get<string>('colors.searchHighlightBackgroundColor'),
@@ -120,6 +122,7 @@ export function setupCallGraph(
             searchHighlightBorderColor: configs.get<string>('colors.searchHighlightBorderColor')
         }
     }
+    printChannelOutput("config:")
     printChannelOutput(JSON.stringify(config, null, 4))
 
 	// panel.onDidChangeViewState((e) => {
@@ -140,7 +143,7 @@ export function setupCallGraph(
         })
     }
     const addEdge = (edge: CallHierarchy) => {
-        const elems = getCyElems(workspaceRoot, edge)
+        const elems = getCyElems(workspaceRoot, edge, config)
         addElems(elems)
     }
 
